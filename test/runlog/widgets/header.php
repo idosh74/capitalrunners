@@ -19,10 +19,10 @@
     $start_date = date('Y-m-d', $start);
     $end_date = date('Y-m-d', strtotime('next saturday', $start));
     $runner_id = $memberAuthentication->getMemberId();
-    $db_host = getenv('DB_HOST') ?: 'localhost';
 
-    $dsn = "mysql:host={$db_host};dbname=u574399506_testlog;charset=utf8mb4";
-    $pdo = new PDO($dsn, "u574399506_testlog", "Sandbox1PA$$", array(
+    require __DIR__ . '/../php/config.php';
+    $dsn = "mysql:host={$HOSTNAME};dbname={$DBNAME};charset=utf8mb4";
+    $pdo = new PDO($dsn, $USERNAME, $PASSWORD, array(
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ));
 
