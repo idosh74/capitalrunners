@@ -429,6 +429,12 @@ table.tablesorter .active_col {
     -moz-appearance: textfield;
 }
 
+#run_time_fields input#run_time {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+}
+
 #run_time_fields input::-webkit-inner-spin-button,
 #run_time_fields input::-webkit-outer-spin-button {
     margin: 0;
@@ -1164,6 +1170,12 @@ table.tablesorter .active_col {
         padding: 0 4px;
         text-align: center;
         font-size: 16px;
+    }
+
+    #run_time_fields input#run_time {
+        width: 96px !important;
+        min-width: 96px !important;
+        max-width: 96px !important;
     }
 
     #run_time_fields input::-webkit-inner-spin-button,

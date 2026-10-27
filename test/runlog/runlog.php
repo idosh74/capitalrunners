@@ -199,12 +199,8 @@ require_once 'php/html_page_init.php';
                     <tr>
                         <td><input type="number" id="run_distance" min="0" max="99.9" step="0.1" inputmode="decimal"></td>
                         <td>
-                            <div id="run_time_fields" class="run_time_fields" role="group" aria-label="זמן">
-                                <input type="number" id="run_time_hours" min="0" max="9" step="1" inputmode="numeric" aria-label="שעות" value="0">
-                                <span aria-hidden="true">:</span>
-                                <input type="number" id="run_time_minutes" min="0" max="59" step="1" inputmode="numeric" aria-label="דקות" value="00">
-                                <span aria-hidden="true">:</span>
-                                <input type="number" id="run_time_seconds" min="0" max="59" step="1" inputmode="numeric" aria-label="שניות" value="00">
+                            <div id="run_time_fields" class="run_time_fields">
+                                <input type="text" id="run_time" inputmode="numeric" autocomplete="off" placeholder="0:00" aria-label="זמן (שעות:דקות:שניות)" value="0:00">
                             </div>
                         </td>
                         <td>

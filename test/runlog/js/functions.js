@@ -733,6 +733,7 @@ var EventDialog = {
         $('#main_run input').blur(EventDialog.calculatePace);
         $('#run_time_hours, #run_time_minutes, #run_time_seconds').blur(EventDialog.calculatePace);
         EventDialog.bindEditableNumericFields();
+        EventDialog.bindRunTimeMask();
         $('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
@@ -768,7 +769,7 @@ var EventDialog = {
     },
 
     bindEditableNumericFields:function () {
-        $('#run_distance, #extra_run_distance, #pulse, #max_pulse, #elevation, #weight, #run_time')
+        $('#run_distance, #extra_run_distance, #pulse, #max_pulse, #elevation, #weight')
             .on('focus', function () {
                 this.select();
             })
@@ -798,6 +799,35 @@ var EventDialog = {
                     value = Math.max(0, Math.min(59, value));
                     this.value = value < 10 ? '0' + value : String(value);
                 }
+            });
+    },
+
+    // stopwatch-style entry: digits fill from the right, 4530 -> 45:30, 13245 -> 1:32:45
+    bindRunTimeMask:function () {
+        var format = function (raw) {
+            var d = String(raw).replace(/\D/g, '').replace(/^0+/, '').slice(-5);
+            while (d.length < 3) {
+                d = '0' + d;
+            }
+            var secs = d.slice(-2);
+            var rest = d.slice(0, -2);
+            if (rest.length <= 2) {
+                return parseInt(rest, 10) + ':' + secs;
+            }
+            return rest.slice(0, -2) + ':' + rest.slice(-2) + ':' + secs;
+        };
+        $('#run_time')
+            .on('focus', function () {
+                this.select();
+            })
+            .on('input', function () {
+                this.value = format(this.value);
+            })
+            .on('blur', function () {
+                var parts = EventDialog.getRunTime().split(':');
+                this.value = parseInt(parts[0], 10) > 0
+                    ? parts[0] + ':' + parts[1] + ':' + parts[2]
+                    : parseInt(parts[1], 10) + ':' + parts[2];
             });
     },
 
