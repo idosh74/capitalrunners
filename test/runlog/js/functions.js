@@ -1225,6 +1225,10 @@ var Comments = {
             commentCssClass += ' new_comment';
         }
 
+        if (comment.is_coach == 1) {
+            commentCssClass += ' coach_comment';
+        }
+
         var commentHtml =
             '<div class="' + commentCssClass + '" id="event_comment_' + comment.comment_id + '">' +
                 Comments.getCommentHtml(comment.event_id, comment.comment_id, comment.commenter_name, comment.comment)  +
@@ -1281,6 +1285,7 @@ var Comments = {
                             event_id: eventId,
                             comment_id: doc.data.comment_id,
                             commenter_name: gMemberName,
+                            is_coach: (typeof gIsCoach !== 'undefined' && gIsCoach) ? 1 : 0,
                             comment: comment
                         });
                         $commentTextarea.val('');

@@ -25,6 +25,7 @@ require_once 'php/html_page_init.php';
 <script type="text/javascript">
 
     var gMemberName = "<?php echo $memberAuthentication->getMemberName(); ?>";
+    var gIsCoach = <?php echo $memberAuthentication->isCoach() == 1 ? 'true' : 'false'; ?>;
     var gTeamCommentsLastFetched = null;
     var gCountNewTeamComments = 0;
 	var runnerId = "<?php echo $memberAuthentication->getMemberId(); ?>"; 
