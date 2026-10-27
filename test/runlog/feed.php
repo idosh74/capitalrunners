@@ -545,170 +545,178 @@ require_once 'php/html_page_init.php';
         margin: 20px 0;
     }
 
-    .feed_actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin: 10px 0 18px;
-        padding: 4px 0 10px;
-        border-bottom: 1px solid #dfe4e6;
-    }
-
-    .feed_actions a,
-    .feed_actions span {
-        display: inline-block;
-        padding: 0 14px;
-        border: 1px solid #c8d1d5;
-        border-radius: 999px;
-        background: #f4f7f7;
-        color: #455a64;
-        font-size: 12px;
-        line-height: 30px;
-        text-decoration: none;
-    }
-
-    .feed_actions a:hover {
-        text-decoration: none;
-        border-color: #1f6f78;
-        background: #e4f3f2;
-        color: #1f6f78;
-    }
-
-    .feed_actions a:focus-visible {
-        outline: 2px solid #8bd3d0;
-        outline-offset: 2px;
-    }
-
-    .feed_jump {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin: 10px 0 8px;
-        padding: 4px 6px;
-        border: 1px solid #dfe4e6;
-        border-radius: 999px;
-        background: #f8fbfb;
-    }
-
-    .feed_jump label {
-        color: #718087;
-        font-size: 11px;
-    }
-
-    .feed_jump input,
-    .feed_jump button {
-        min-height: 30px;
-        box-sizing: border-box;
-        border: 1px solid #c8d1d5;
-        border-radius: 999px;
-        font: inherit;
-        font-size: 12px;
-    }
-
-    .feed_jump input {
-        padding: 0 8px;
-        background: #ffffff;
-        color: #455a64;
-    }
-
-    .feed_jump button {
-        padding: 0 12px;
-        border-color: #1f6f78;
-        background: #1f6f78;
-        color: #ffffff;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .feed_jump button:hover {
-        background: #174f55;
-    }
-
-    #feed .event_new_comment,
-    #feed .event_edit_comment {
-        border: 1px solid #c8d1d5;
-        border-radius: 10px;
-        background: #f8fbfb;
-        color: #263238;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-
-    #feed .event_new_comment::placeholder,
-    #feed .event_edit_comment::placeholder {
-        color: #8a989d;
-    }
-
-    #feed .event_new_comment:focus,
-    #feed .event_edit_comment:focus {
-        outline: none;
-        border-color: #1f6f78;
-        background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(139, 211, 208, 0.28);
-    }
-
-    #feed .day_events .event {
-        display: block;
-    }
-
     #feed .day_events .event .event_body {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
+        display: contents;
     }
 
     #feed .day_events .event .event_avatar {
-        position: relative;
-        flex: 0 0 44px;
-        width: 44px;
-        height: 44px;
-        overflow: hidden;
-        border-radius: 50%;
-        background: #e2eaed;
-    }
-
-    #feed .day_events .event .event_avatar::before {
-        position: absolute;
-        top: 8px;
-        left: 14px;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #81919a;
-        content: "";
-    }
-
-    #feed .day_events .event .event_avatar::after {
-        position: absolute;
-        right: 7px;
-        bottom: -3px;
-        left: 7px;
-        height: 23px;
-        border-radius: 50% 50% 0 0;
-        background: #81919a;
-        content: "";
-    }
-
-    #feed .day_events .event .event_type {
-        display: block;
-        flex: 0 0 10px;
-        width: 10px;
-        min-height: 38px;
-    }
-
-    #feed .day_events .event .event_title {
-        display: block;
-        min-width: 0;
-        padding: 0;
-    }
-
-    #feed .day_events .event .comments {
-        width: 353px;
-        margin-top: 8px;
-        padding-top: 5px;
+        display: none;
     }
 
     @media screen and (max-width: 767px) {
+        .feed_actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 10px 0 18px;
+            padding: 4px 0 10px;
+            border-bottom: 1px solid #dfe4e6;
+        }
+
+        .feed_actions a,
+        .feed_actions span {
+            display: inline-block;
+            padding: 0 14px;
+            border: 1px solid #c8d1d5;
+            border-radius: 999px;
+            background: #f4f7f7;
+            color: #455a64;
+            font-size: 12px;
+            line-height: 30px;
+            text-decoration: none;
+        }
+
+        .feed_actions a:hover {
+            text-decoration: none;
+            border-color: #1f6f78;
+            background: #e4f3f2;
+            color: #1f6f78;
+        }
+
+        .feed_actions a:focus-visible {
+            outline: 2px solid #8bd3d0;
+            outline-offset: 2px;
+        }
+
+        .feed_jump {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 10px 0 8px;
+            padding: 4px 6px;
+            border: 1px solid #dfe4e6;
+            border-radius: 999px;
+            background: #f8fbfb;
+        }
+
+        .feed_jump label {
+            color: #718087;
+            font-size: 11px;
+        }
+
+        .feed_jump input,
+        .feed_jump button {
+            min-height: 30px;
+            box-sizing: border-box;
+            border: 1px solid #c8d1d5;
+            border-radius: 999px;
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .feed_jump input {
+            padding: 0 8px;
+            background: #ffffff;
+            color: #455a64;
+        }
+
+        .feed_jump button {
+            padding: 0 12px;
+            border-color: #1f6f78;
+            background: #1f6f78;
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .feed_jump button:hover {
+            background: #174f55;
+        }
+
+        #feed .event_new_comment,
+        #feed .event_edit_comment {
+            border: 1px solid #c8d1d5;
+            border-radius: 10px;
+            background: #f8fbfb;
+            color: #263238;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        #feed .event_new_comment::placeholder,
+        #feed .event_edit_comment::placeholder {
+            color: #8a989d;
+        }
+
+        #feed .event_new_comment:focus,
+        #feed .event_edit_comment:focus {
+            outline: none;
+            border-color: #1f6f78;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(139, 211, 208, 0.28);
+        }
+
+        #feed .day_events .event {
+            display: block;
+        }
+
+        #feed .day_events .event .event_body {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        #feed .day_events .event .event_avatar {
+            position: relative;
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            overflow: hidden;
+            border-radius: 50%;
+            background: #e2eaed;
+        }
+
+        #feed .day_events .event .event_avatar::before {
+            position: absolute;
+            top: 8px;
+            left: 14px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #81919a;
+            content: "";
+        }
+
+        #feed .day_events .event .event_avatar::after {
+            position: absolute;
+            right: 7px;
+            bottom: -3px;
+            left: 7px;
+            height: 23px;
+            border-radius: 50% 50% 0 0;
+            background: #81919a;
+            content: "";
+        }
+
+        #feed .day_events .event .event_type {
+            display: block;
+            flex: 0 0 10px;
+            width: 10px;
+            min-height: 38px;
+        }
+
+        #feed .day_events .event .event_title {
+            display: block;
+            min-width: 0;
+            padding: 0;
+        }
+
+        #feed .day_events .event .comments {
+            width: 353px;
+            margin-top: 8px;
+            padding-top: 5px;
+        }
+
         .content {
             width: auto;
             margin: 0 14px;
