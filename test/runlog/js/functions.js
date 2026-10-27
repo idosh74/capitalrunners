@@ -169,7 +169,7 @@ var Calendar = {
             }
             var mobileSummary = Calendar.getMobileEventSummary(item);
             var eventButton = $('<button type="button" class="mobileAgendaEvent"></button>');
-            eventButton.css('border-right-color', mobileEvent.borderColor);
+            eventButton.css({'background-color': mobileEvent.color, 'border-right-color': mobileEvent.borderColor});
             eventButton.append($('<span class="mobileAgendaEventTitle"></span>').text(mobileSummary.title));
             if (mobileSummary.meta) {
                 eventButton.append($('<span class="mobileAgendaEventMeta"></span>').text(mobileSummary.meta));
