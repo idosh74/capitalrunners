@@ -197,7 +197,7 @@ require_once 'php/html_page_init.php';
                         <th>קצב</th>
                     </tr>
                     <tr>
-                        <td><input type="number" id="run_distance" min="0" max="99.9" step="0.1" inputmode="decimal"></td>
+                        <td><input type="text" id="run_distance" inputmode="numeric" autocomplete="off" placeholder="0.0"></td>
                         <td>
                             <div id="run_time_fields" class="run_time_fields">
                                 <input type="text" id="run_time" inputmode="numeric" autocomplete="off" placeholder="0:00" aria-label="זמן (שעות:דקות:שניות)" value="0:00">

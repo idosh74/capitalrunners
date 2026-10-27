@@ -734,6 +734,7 @@ var EventDialog = {
         $('#run_time_hours, #run_time_minutes, #run_time_seconds').blur(EventDialog.calculatePace);
         EventDialog.bindEditableNumericFields();
         EventDialog.bindRunTimeMask();
+        EventDialog.bindRunDistanceMask();
         $('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
@@ -799,6 +800,18 @@ var EventDialog = {
                     value = Math.max(0, Math.min(59, value));
                     this.value = value < 10 ? '0' + value : String(value);
                 }
+            });
+    },
+
+    // digits fill from the right, the last digit is the decimal: 105 -> 10.5, 5 -> 0.5
+    bindRunDistanceMask:function () {
+        $('#run_distance')
+            .on('input', function () {
+                var d = String(this.value).replace(/\D/g, '').replace(/^0+/, '').slice(-3);
+                while (d.length < 2) {
+                    d = '0' + d;
+                }
+                this.value = parseInt(d.slice(0, -1), 10) + '.' + d.slice(-1);
             });
     },
 
