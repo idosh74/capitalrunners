@@ -202,7 +202,7 @@ require_once 'php/html_page_init.php';
                     var runDate = null;
                     for (var i in doc.data['events']){
                         var event = doc.data['events'][i];
-                        if (event['run_date'] != runDate){
+                        if (String(event['run_date']).split(' ')[0] != String(runDate).split(' ')[0]){
                             runDate = event['run_date'];
                             feed.append('<div class="day_header">'+Time.jsDateToHebString(Time.sqlDateToJsDate(runDate))+'</div>');
                             var $dayEvents = $('<div class="day_events"></div>');
@@ -353,7 +353,7 @@ require_once 'php/html_page_init.php';
 						var runDate = null;
                        for (var i in doc.data['events']){
                         var event = doc.data['events'][i];
-                        if (event['run_date'] != runDate){
+                        if (String(event['run_date']).split(' ')[0] != String(runDate).split(' ')[0]){
                             runDate = event['run_date'];
                             feed.append('<div class="day_header">'+Time.jsDateToHebString(Time.sqlDateToJsDate(runDate))+'</div>');
                             var $dayEvents = $('<div class="day_events"></div>');
@@ -408,7 +408,7 @@ require_once 'php/html_page_init.php';
 						var runDate = null;
                        for (var i in doc.data['events']){
                         var event = doc.data['events'][i];
-                        if (event['run_date'] != runDate){
+                        if (String(event['run_date']).split(' ')[0] != String(runDate).split(' ')[0]){
                             runDate = event['run_date'];
                             feed.append('<div class="day_header">'+Time.jsDateToHebString(Time.sqlDateToJsDate(runDate))+'</div>');
                             var $dayEvents = $('<div class="day_events"></div>');
@@ -463,7 +463,7 @@ require_once 'php/html_page_init.php';
 						var runDate = null;
                        for (var i in doc.data['events']){
                         var event = doc.data['events'][i];
-                        if (event['run_date'] != runDate){
+                        if (String(event['run_date']).split(' ')[0] != String(runDate).split(' ')[0]){
                             runDate = event['run_date'];
                             feed.append('<div class="day_header">'+Time.jsDateToHebString(Time.sqlDateToJsDate(runDate))+'</div>');
                             var $dayEvents = $('<div class="day_events"></div>');

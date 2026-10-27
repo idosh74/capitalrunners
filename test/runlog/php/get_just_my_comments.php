@@ -26,7 +26,7 @@ function getDayEventsAsJSON($conn,$date,$untilDate,$runnerId) {
     WHERE  tl_events.runner_id ='" . $runnerId . "'
 	and date(tl_events.run_date) > '" . $date . "'
 	and date(tl_events.run_date) <= '" . $untilDate . "'
-    ORDER BY tl_events.id DESC";
+    ORDER BY tl_events.run_date DESC, tl_events.id DESC";
 
     $stmt = $conn->query($sql);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
