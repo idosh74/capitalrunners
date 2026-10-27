@@ -9,6 +9,18 @@ $.ajaxSetup({
     }
 });
 
+var SaveHelper = {
+    failMessage:function (prefix, xhr) {
+        var reason = 'שגיאת תקשורת עם השרת';
+        if (xhr && (xhr.status == 413 || xhr.status == 414)) {
+            reason = 'הטקסט ארוך מדי';
+        } else if (xhr && xhr.status) {
+            reason = 'שגיאת שרת (' + xhr.status + ')';
+        }
+        return prefix + ': ' + reason + '. הנתונים לא נשמרו.';
+    }
+};
+
 var Calendar = {
 
     // initialize the calendar
@@ -346,10 +358,12 @@ var Calendar = {
                     var event_fields_data = EventDialog.getData();
                     if (event_fields_data != null) {
                         // passed validation
+                        var $eventDialog = $(this);
                         event_fields_data = Calendar.appendIdentityFields(event_fields_data, calEvent);
                         var event_fields_str = JSON.stringify(event_fields_data);
                         $.ajax({
                             url:'php/update_event.php',
+                            type:'POST',
                             dataType:'text',
                             data:{
                                 event_fields:event_fields_str
@@ -360,12 +374,15 @@ var Calendar = {
                                     alert("Update failed: "
                                         + doc.status.emessage);
                                 } else {
+                                    $eventDialog.dialog("close");
                                     $('#calendar').fullCalendar('refetchEvents');
                                     Calendar.refreshMobileAgenda();
                                 }
+                            },
+                            error:function (xhr) {
+                                alert(SaveHelper.failMessage('העדכון נכשל', xhr));
                             }
                         });
-                        $(this).dialog("close");
                     }
                 },
                 "מחק":function () {
@@ -437,10 +454,12 @@ var Calendar = {
                         var event_fields_data = EventDialog.getData();
                         if (event_fields_data != null) {
                             // passed validation
+                            var $eventDialog = $(this);
                             event_fields_data.date = the_date;
                             var event_fields_str = JSON.stringify(event_fields_data);
                             $.ajax({
                                 url:'php/create_event.php',
+                                type:'POST',
                                 dataType:'text',
                                 data:{
                                     event_fields:event_fields_str
@@ -451,12 +470,15 @@ var Calendar = {
                                         alert("Create failed: "
                                             + doc.status.emessage);
                                     } else {
+                                        $eventDialog.dialog("close");
                                         $('#calendar').fullCalendar('refetchEvents');
                                         Calendar.refreshMobileAgenda();
                                     }
+                                },
+                                error:function (xhr) {
+                                    alert(SaveHelper.failMessage('היצירה נכשלה', xhr));
                                 }
                             });
-                            $(this).dialog("close");
                         }
                     },
                     "סגור":function () {
@@ -706,7 +728,7 @@ var EventDialog = {
         $('#run_pace').text('');
         $('#extra_run_distance').val('0');
 
-        $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
+        $('#notesContainer').empty().append('<textarea id="notes" maxlength="20000"></textarea>');
         $('#notes').val('').elastic();
 		$('#pulse').val('0');
 		$('#max_pulse').val('0');
@@ -1039,7 +1061,7 @@ var EventDialog = {
                     $('#run_distance').val(EventDialog.formatDecimalInput(fields.run_distance));
                     EventDialog.setRunTime(fields.run_time);
                     $('#extra_run_distance').val(EventDialog.formatDecimalInput(fields.extra_distance));
-                    $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
+                    $('#notesContainer').empty().append('<textarea id="notes" maxlength="20000"></textarea>');
                     $('#notes').val(fields.notes).elastic();
 					$('#pulse').val(fields.pulse);
 					$('#max_pulse').val(fields.max_pulse);
@@ -1202,6 +1224,7 @@ var Comments = {
             };
             $.ajax({
                 url: 'php/create_event_comment.php',
+                type: 'POST',
                 dataType: 'text',
                 data: {
                     event_comment: JSON.stringify(eventComment)
@@ -1220,6 +1243,9 @@ var Comments = {
                         });
                         $commentTextarea.val('');
                     }
+                },
+                error: function (xhr) {
+                    alert(SaveHelper.failMessage('הוספת התגובה נכשלה', xhr));
                 }
             });
         }
@@ -1314,6 +1340,7 @@ var Comments = {
         if (comment) {
             $.ajax({
                 url: 'php/update_event_comment.php',
+                type: 'POST',
                 dataType: 'text',
                 data: {
                     event_comment_id: commentId,
@@ -1327,6 +1354,9 @@ var Comments = {
                     else {
                         Comments.closeCommentEdit(eventId, commentId, comment);
                     }
+                },
+                error: function (xhr) {
+                    alert(SaveHelper.failMessage('עדכון התגובה נכשל', xhr));
                 }
             });
         } else {
