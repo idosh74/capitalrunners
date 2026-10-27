@@ -225,7 +225,7 @@ require_once 'php/html_page_init.php';
                         <th>תוספת מרחק (חימום ושחרור)</th>
                     </tr>
                     <tr>
-                        <td><input type="number" id="extra_run_distance" min="0" max="99.9" step="0.1" inputmode="decimal"></td>
+                        <td><input type="text" id="extra_run_distance" inputmode="numeric" autocomplete="off" placeholder="0.0"></td>
                     </tr>
                 </table>
 

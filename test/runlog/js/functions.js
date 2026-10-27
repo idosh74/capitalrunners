@@ -805,7 +805,7 @@ var EventDialog = {
 
     // digits fill from the right, the last digit is the decimal: 105 -> 10.5, 5 -> 0.5
     bindRunDistanceMask:function () {
-        $('#run_distance')
+        $('#run_distance, #extra_run_distance')
             .on('input', function () {
                 var d = String(this.value).replace(/\D/g, '').replace(/^0+/, '').slice(-3);
                 while (d.length < 2) {
