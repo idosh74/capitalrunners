@@ -764,6 +764,7 @@ table.tablesorter .active_col {
 
     .mobileAgendaHeader {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
@@ -790,6 +791,7 @@ table.tablesorter .active_col {
     .mobileAgendaActions {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 6px;
     }
 
@@ -844,8 +846,9 @@ table.tablesorter .active_col {
     }
 
     #mobileAgendaDatePicker {
-        width: 42px;
-        padding: 0 4px;
+        width: 140px;
+        min-width: 120px;
+        padding: 0 8px;
         background: #ffffff;
         color: #263238;
     }
