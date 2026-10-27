@@ -546,7 +546,7 @@ require_once 'php/html_page_init.php';
     }
 
     #feed .day_events .event .event_body {
-        display: contents;
+        display: block;
     }
 
     #feed .day_events .event .event_avatar {

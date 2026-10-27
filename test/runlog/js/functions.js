@@ -1110,7 +1110,9 @@ var Comments = {
         var $eventTitle = $('<div class="event_title"></div>');
         var $comments = $('<div class="comments"></div>');
         var $commentList = $('<div class="list"></div>').attr('id', 'event_comments_' + event.id);
-        var $commentInput = $('<textarea class="event_new_comment" placeholder="&#10148;" maxlength="2000"></textarea>')
+        var isMobileView = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+        var $commentInput = $('<textarea class="event_new_comment" maxlength="2000"></textarea>')
+            .attr('placeholder', isMobileView ? '\u27A4' : 'הוספת פרגון...')
             .attr('id', 'event_new_comment_' + event.id);
 
         $eventType.css({
