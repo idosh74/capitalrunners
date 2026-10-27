@@ -33,6 +33,171 @@ var Calendar = {
         });
 
         EventDialog.init();
+        Calendar.initMobileAgenda();
+    },
+
+    initMobileAgenda:function () {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) {
+            return;
+        }
+
+        var today = new Date();
+        $('#mobileAgendaDatePicker').val(Calendar.mobileDateValue(today));
+
+        $('#mobileAgendaAdd').click(function () {
+            var selectedDate = $('#mobileAgendaDatePicker').val();
+            var date = selectedDate ? Calendar.mobileDateToDate(selectedDate) : today;
+            Calendar.handleClickDay(date, true, null, null);
+        });
+
+        Calendar.refreshMobileAgenda();
+    },
+
+    refreshMobileAgenda:function () {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) {
+            return;
+        }
+
+        var today = new Date();
+        var start = new Date(today.getTime());
+        var end = new Date(today.getTime());
+        start.setDate(start.getDate() - 30);
+        end.setDate(end.getDate() + 30);
+
+        Calendar.fetchMobileEvents(start, end);
+    },
+
+    fetchMobileEvents:function (start, end) {
+        var memberIdForAgenda = $('#users').val();
+        if (!memberIdForAgenda) {
+            $('#mobileAgendaList').html('<p class="mobileAgendaState">טוען את האימונים...</p>');
+            return;
+        }
+
+        $('#mobileAgendaList').html('<p class="mobileAgendaState">טוען את האימונים...</p>');
+        $.ajax({
+            url:'php/get_events.php',
+            dataType:'text',
+            data:{
+                start:Math.round(start.getTime() / 1000),
+                end:Math.round(end.getTime() / 1000),
+                member_id:memberIdForAgenda
+            },
+            success:function (txt) {
+                var doc = Utils.parseJSON(txt);
+                if (doc.status.ecode == STATUS_ERR) {
+                    $('#mobileAgendaList').html('<p class="mobileAgendaState">טעינת האימונים נכשלה</p>');
+                    return;
+                }
+                Calendar.renderMobileAgenda(doc.data || []);
+            },
+            error:function () {
+                $('#mobileAgendaList').html('<p class="mobileAgendaState">טעינת האימונים נכשלה</p>');
+            }
+        });
+    },
+
+    renderMobileAgenda:function (events) {
+        var agenda = $('#mobileAgendaList');
+        agenda.empty();
+
+        if (!events.length) {
+            agenda.html('<p class="mobileAgendaEmpty">אין אימונים להצגה</p>');
+            return;
+        }
+
+        var currentDate = '';
+        var renderedEvents = 0;
+        $.each(events, function (index, item) {
+            if (!item.start) {
+                return;
+            }
+            var eventDate = new Date(item.start.replace(' ', 'T'));
+            if (isNaN(eventDate.getTime())) {
+                return;
+            }
+            var dateKey = eventDate.getFullYear() + '-' + eventDate.getMonth() + '-' + eventDate.getDate();
+            if (dateKey != currentDate) {
+                currentDate = dateKey;
+                var dateHeader = $('<div class="mobileAgendaDate"></div>');
+                dateHeader.append($('<h3></h3>').text(Calendar.formatMobileDate(eventDate)));
+                var addButton = $('<button type="button" class="mobileAgendaDateAdd">הוספה</button>');
+                addButton.click(function () {
+                    Calendar.handleClickDay(eventDate, true, null, null);
+                });
+                dateHeader.append(addButton);
+                agenda.append(dateHeader);
+            }
+
+            var mobileEvent = {
+                event_id:item.id,
+                title:item.type,
+                start:item.start,
+                member_id:$('#users').val(),
+                color:'#ffffff',
+                borderColor:'#1f6f78'
+            };
+            if (EVENT_TYPES_ATTRIBUTES[item.run_type_id]) {
+                mobileEvent.color = Calendar.getEventColor(item.run_type_id);
+                mobileEvent.borderColor = Calendar.getEventBorderColor(item.run_type_id);
+            }
+            var mobileSummary = Calendar.getMobileEventSummary(item);
+            var eventButton = $('<button type="button" class="mobileAgendaEvent"></button>');
+            eventButton.css('border-right-color', mobileEvent.borderColor);
+            eventButton.append($('<span class="mobileAgendaEventTitle"></span>').text(mobileSummary.title));
+            if (mobileSummary.meta) {
+                eventButton.append($('<span class="mobileAgendaEventMeta"></span>').text(mobileSummary.meta));
+            }
+            if (mobileSummary.notes) {
+                eventButton.append($('<span class="mobileAgendaEventNotes"></span>').text(mobileSummary.notes));
+            }
+            eventButton.click(function () {
+                Calendar.handleClickEvent(mobileEvent, null, null);
+            });
+            agenda.append(eventButton);
+            renderedEvents++;
+        });
+
+        if (!renderedEvents) {
+            agenda.html('<p class="mobileAgendaEmpty">אין אימונים להצגה</p>');
+        }
+    },
+
+    formatMobileDate:function (date) {
+        var days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        return days[date.getDay()] + ', ' + day + '/' + month;
+    },
+
+    mobileDateToDate:function (value) {
+        var parts = value.split('-');
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    },
+
+    mobileDateValue:function (date) {
+        var month = date.getMonth() + 1;
+        var day = date.getDate();
+        return date.getFullYear() + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
+    },
+
+    getMobileEventSummary:function (event) {
+        var distance = EventFormatter.getTotalDistance(event.warmup_distance, event.run_distance, event.cooldown_distance, event.run_type_id);
+        var distanceAndPace = EventFormatter.getRunDistanceAndPace(event.warmup_distance, event.run_distance, event.cooldown_distance, event.run_time, event.run_type_id);
+        var metaParts = [];
+
+        if (distance != null) {
+            metaParts.push(distance);
+        }
+        if (distanceAndPace != null && distanceAndPace !== '') {
+            metaParts.push(distanceAndPace);
+        }
+
+        return {
+            title:event.type,
+            meta:metaParts.join(' '),
+            notes:event.notes || ''
+        };
     },
 
     init2:function () {
@@ -125,8 +290,9 @@ var Calendar = {
 
         EventDialog.reset();
         $('#create_update_event_dialog').dialog({
-            height:700,
+            height:550,
             width:500,
+            dialogClass:'mobileWorkoutDialog',
             show:{
                 effect:'drop',
                 direction:'rtl'
@@ -150,8 +316,8 @@ var Calendar = {
                                     alert("Update failed: "
                                         + doc.status.emessage);
                                 } else {
-                                    $('#calendar').fullCalendar('render');
-
+                                    $('#calendar').fullCalendar('refetchEvents');
+                                    Calendar.refreshMobileAgenda();
                                 }
                             }
                         });
@@ -175,8 +341,8 @@ var Calendar = {
                                             alert("Deletion failed: "
                                                 + doc.emessage);
                                         } else {
-                                            $('#calendar').fullCalendar(
-                                                'render');
+                                            $('#calendar').fullCalendar('refetchEvents');
+                                            Calendar.refreshMobileAgenda();
                                         }
                                     }
                                 });
@@ -198,7 +364,7 @@ var Calendar = {
         });
         $('#create_update_event_dialog').css('background-color', '#feffe5');
         EventDialog.setData(calEvent);
-        $("#create_update_event_dialog").dialog("open");
+        $("#create_update_event_dialog").dialog("open").parent('.ui-dialog').addClass('mobileWorkoutDialog');
     },
 
     // Handle clicking on the calendar cell (not on the event)
@@ -214,8 +380,9 @@ var Calendar = {
         EventDialog.reset();
         $('#create_update_event_dialog').dialog(
             {
-                height:700,
+                height:550,
                 width:500,
+                dialogClass:'mobileWorkoutDialog',
                 show:{
                     effect:'drop',
                     direction:'rtl'
@@ -240,8 +407,8 @@ var Calendar = {
                                         alert("Create failed: "
                                             + doc.status.emessage);
                                     } else {
-                                        $('#calendar').fullCalendar('render');
-
+                                        $('#calendar').fullCalendar('refetchEvents');
+                                        Calendar.refreshMobileAgenda();
                                     }
                                 }
                             });
@@ -254,7 +421,7 @@ var Calendar = {
                 }
             });
         $('#create_update_event_dialog').css('background-color', '#feffe5');
-        $("#create_update_event_dialog").dialog("open");
+        $("#create_update_event_dialog").dialog("open").parent('.ui-dialog').addClass('mobileWorkoutDialog');
     },
 
     appendIdentityFields:function (eventFields, calEvent) {
@@ -339,10 +506,10 @@ var Calendar = {
         {
             html += " - מאמץ: <span>"+ rpe+"</span>  ";
         }
-        // if (weight != 0 && weight != null)
-        // {
-        //     html += " - משקל: <span>"+ weight+" קג'</span>  ";
-        // }
+        if (weight != 0 && weight != null)
+        {
+             html += " - משקל: <span>"+ weight+" קג'</span>  ";
+         }
         
         html += "</div>";
         
@@ -363,6 +530,13 @@ var Calendar = {
             html += "<div><span>"+notes+"</span></div>";
         }
 
+        html += "</div>";
+        if (run_time != "00:00")
+        {
+            html += "</div>";
+        }
+        html += "</div>";
+
         return html;
     }
 }
@@ -370,51 +544,59 @@ var Calendar = {
 var EventFormatter = {
     getTotalDistance:function (warmupDistance, runDistance, cooldownDistance, runTypeId) {
 
-        var runDistance = parseFloat(runDistance);
-        if (runDistance == NaN || runDistance == 0 || runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED) {
+        var runDistanceNum = parseFloat(runDistance);
+        if (isNaN(runDistanceNum) || runDistanceNum <= 0 || runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED || runTypeId == EventTypes.POWER) {
             return null;
         }
         else {
-            return (runDistance).toFixed(1) + ' ק"מ';
+            return (runDistanceNum).toFixed(1) + ' ק"מ';
         }
     },
 
     getRunDistanceAndPace:function (warmupDistance, runDistance, cooldownDistance, runTime, runTypeId) {
 
-        if (runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED) {
+        if (runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED || runTypeId == EventTypes.POWER) {
             // no meaning for run pace in these cases
             return null;
         }
 
-        var runDistance = parseFloat(runDistance);
-        if (runDistance == NaN || runDistance == 0) {
-            return;
+        var runDistanceNum = parseFloat(runDistance);
+        if (isNaN(runDistanceNum)) {
+            runDistanceNum = 0;
         }
 
-        var warmupDistance = parseFloat(warmupDistance);
-        if (warmupDistance == NaN) {
-            warmupDistance = 0;
+        var runTimeNum = parseInt(runTime, 10);
+        if (isNaN(runTimeNum)) {
+            runTimeNum = 0;
         }
 
-        var cooldownDistance = parseFloat(cooldownDistance);
-        if (cooldownDistance == NaN) {
-            cooldownDistance = 0;
+        if (runDistanceNum <= 0 && runTimeNum <= 0) {
+            return null;
+        }
+
+        var warmupDistanceNum = parseFloat(warmupDistance);
+        if (isNaN(warmupDistanceNum)) {
+            warmupDistanceNum = 0;
+        }
+
+        var cooldownDistanceNum = parseFloat(cooldownDistance);
+        if (isNaN(cooldownDistanceNum)) {
+            cooldownDistanceNum = 0;
         }
 
         var runTimeFormatted = null;
-        if (runTime > 3600) {
-            runTimeFormatted = Time.convertSecondsToHMMSS(runTime);
+        if (runTimeNum >= 3600) {
+            runTimeFormatted = Time.convertSecondsToHMMSS(runTimeNum);
         }
-        else if (runTime > 0) {
-            runTimeFormatted = Time.convertSecondsToMMSS(runTime);
+        else if (runTimeNum > 0) {
+            runTimeFormatted = Time.convertSecondsToMMSS(runTimeNum);
         }
 
-        var runPace = Time.calculatePace(runDistance, runTime);
-        var warmupOrCooldown = (warmupDistance > 0 || cooldownDistance > 0);
+        var runPace = Time.calculatePace(runDistanceNum, runTimeNum);
+        var warmupOrCooldown = (warmupDistanceNum > 0 || cooldownDistanceNum > 0);
+        var totalRunDistanceFormatted = '';
         if (warmupOrCooldown) {
-            totalRunDistanceFormatted = (warmupDistance + runDistance + cooldownDistance).toFixed(1) + ' ק"מ';
-        } else {
-            totalRunDistanceFormatted = '';
+            totalRunDistanceFormatted = (warmupDistanceNum + runDistanceNum + cooldownDistanceNum).toFixed(1) + ' ק"מ';
         }
 
         var runDistanceAndPace = '';
@@ -434,35 +616,30 @@ var EventFormatter = {
 
         return runDistanceAndPace;
     }
-}
+};
 
 var EventDialog = {
 
     // initializes the event dialog with default values and fills the shoes and courses <select>s
     // with values appropriate to the current user
     init:function () {
-        this.initRunTypes();
-        this.initRPE();
-        this.initShoesAndCourses();
-        $('#rpe').change(this.RPEChanged);
-        $('#courseSelect').change(this.courseChanged);
-        $('#raceSelect').change(this.raceChanged);
+        EventDialog.initRunTypes();
+        EventDialog.initRPE();
+        EventDialog.initShoesAndCourses();
+        $('#rpe').change(EventDialog.RPEChanged);
+        $('#courseSelect').change(EventDialog.courseChanged);
+        $('#raceSelect').change(EventDialog.raceChanged);
         EventDialog.shoesDetached = false;
-        $('#shoeSelect').change(this.shoeChanged);
-        $('#extraShoeSelect').change(this.extraShoeChanged);
-
-        // input masking for distance, duration fields
-        $.mask.definitions['5'] = "[0-5]";
-        $('#run_distance').mask('99.9', {placeholder:"0"});
-        $('#run_time').mask('9:59:59', {placeholder:"0"});
-        $('#extra_run_distance').mask('99.9', {placeholder:"0"});
+        $('#shoeSelect').change(EventDialog.shoeChanged);
+        $('#extraShoeSelect').change(EventDialog.extraShoeChanged);
 
         // handler for distance, duration change event in order to update pace
-        $('#main_run input[type="text"]').blur(this.calculatePace);
+        $('#main_run input').blur(EventDialog.calculatePace);
+        $('#run_time_hours, #run_time_minutes, #run_time_seconds').blur(EventDialog.calculatePace);
+        EventDialog.bindEditableNumericFields();
         $('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
- 		$('#weight').mask('99.9', {placeholder:"0"});    
     },
 
     // resets the event dialog to its default values
@@ -480,17 +657,126 @@ var EventDialog = {
         $('#inactive_extra_shoe').hide();
         EventDialog.shoesDetached = false;
 
-        $('#run_distance').val('00.0');
-        $('#run_time').val('0:00:00');
+        $('#run_distance').val('0');
+        EventDialog.setRunTime(0);
         $('#run_pace').text('');
-        $('#extra_run_distance').val('00.0');
+        $('#extra_run_distance').val('0');
 
         $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
         $('#notes').val('').elastic();
 		$('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
- 		$('#weight').val('00.0');
+		$('#weight').val('0');
+    },
+
+    bindEditableNumericFields:function () {
+        $('#run_distance, #extra_run_distance, #pulse, #max_pulse, #elevation, #weight, #run_time')
+            .on('focus', function () {
+                this.select();
+            })
+            .on('blur', function () {
+                if (this.value === '') {
+                    this.value = '0';
+                }
+                if (this.value.indexOf('.') === 0) {
+                    this.value = '0' + this.value;
+                }
+            });
+
+        $('#run_time_hours, #run_time_minutes, #run_time_seconds')
+            .on('focus', function () {
+                this.select();
+            })
+            .on('blur', function () {
+                var value = parseInt(this.value, 10);
+                if (isNaN(value)) {
+                    value = 0;
+                }
+
+                if (this.id === 'run_time_hours') {
+                    value = Math.max(0, Math.min(9, value));
+                    this.value = value;
+                } else {
+                    value = Math.max(0, Math.min(59, value));
+                    this.value = value < 10 ? '0' + value : String(value);
+                }
+            });
+    },
+
+    getRunTime:function () {
+        if ($('#run_time_hours').length > 0) {
+            var hours = parseInt($('#run_time_hours').val(), 10);
+            var minutes = parseInt($('#run_time_minutes').val(), 10);
+            var seconds = parseInt($('#run_time_seconds').val(), 10);
+
+            if (isNaN(hours)) {
+                hours = 0;
+            }
+            if (isNaN(minutes)) {
+                minutes = 0;
+            }
+            if (isNaN(seconds)) {
+                seconds = 0;
+            }
+
+            hours = Math.max(0, Math.min(9, hours));
+            minutes = Math.max(0, Math.min(59, minutes));
+            seconds = Math.max(0, Math.min(59, seconds));
+
+            return hours + ':' + Time.paddWithZero(minutes) + ':' + Time.paddWithZero(seconds);
+        } else if ($('#run_time').length > 0) {
+            var raw = $.trim($('#run_time').val() || '');
+            if (!raw) {
+                return '0:00:00';
+            }
+            var parts = raw.split(':');
+            if (parts.length === 1) {
+                var mins = parseInt(parts[0], 10);
+                if (isNaN(mins)) return '0:00:00';
+                var h = Math.floor(mins / 60);
+                var m = mins % 60;
+                return Math.min(9, h) + ':' + Time.paddWithZero(m) + ':00';
+            } else if (parts.length === 2) {
+                var mins2 = parseInt(parts[0], 10) || 0;
+                var secs2 = parseInt(parts[1], 10) || 0;
+                var h2 = Math.floor(mins2 / 60);
+                var m2 = mins2 % 60;
+                return Math.min(9, h2) + ':' + Time.paddWithZero(m2) + ':' + Time.paddWithZero(Math.min(59, secs2));
+            } else if (parts.length >= 3) {
+                var h3 = Math.max(0, Math.min(9, parseInt(parts[0], 10) || 0));
+                var m3 = Math.max(0, Math.min(59, parseInt(parts[1], 10) || 0));
+                var s3 = Math.max(0, Math.min(59, parseInt(parts[2], 10) || 0));
+                return h3 + ':' + Time.paddWithZero(m3) + ':' + Time.paddWithZero(s3);
+            }
+        }
+        return '0:00:00';
+    },
+
+    setRunTime:function (totalSeconds) {
+        totalSeconds = parseInt(totalSeconds, 10);
+        if (isNaN(totalSeconds) || totalSeconds < 0) {
+            totalSeconds = 0;
+        }
+
+        var hours = Math.floor(totalSeconds / 3600);
+        var remainder = totalSeconds % 3600;
+        var minutes = Math.floor(remainder / 60);
+        var seconds = remainder % 60;
+
+        if ($('#run_time_hours').length > 0) {
+            $('#run_time_hours').val(hours);
+            $('#run_time_minutes').val(minutes < 10 ? '0' + minutes : minutes);
+            $('#run_time_seconds').val(seconds < 10 ? '0' + seconds : seconds);
+        }
+        if ($('#run_time').length > 0) {
+            $('#run_time').val(Time.convertSecondsToHMMSS(totalSeconds));
+        }
+    },
+
+    formatDecimalInput:function (value) {
+        var number = parseFloat(value);
+        return isNaN(number) ? '0' : String(number);
     },
 
     // populate the run types <select>
@@ -504,7 +790,7 @@ var EventDialog = {
         }
 
         // handler for the run types combo box change
-        $('#run_types').change(this.runTypeChanged);
+        $('#run_types').change(EventDialog.runTypeChanged);
     },
 
         // populate the RPE <select>
@@ -630,19 +916,19 @@ var EventDialog = {
     getData:function () {
         var eventFields = new Object();
         eventFields.run_distance = $('#run_distance').val();
-        if (!this.validateDistance("תרגיל", eventFields.run_distance, MIN_RUN_DISTANCE, MAX_RUN_DISTANCE)) {
+        if (!EventDialog.validateDistance("תרגיל", eventFields.run_distance, MIN_RUN_DISTANCE, MAX_RUN_DISTANCE)) {
             return null;
         }
-        eventFields.run_time = Time.convertHMMSSToSeconds($('#run_time').val());
-        if (!this.validateDuration("תרגיל", eventFields.run_time, MIN_RUN_TIME, MAX_RUN_TIME, Time.convertSecondsToHMMSS)) {
+        eventFields.run_time = Time.convertHMMSSToSeconds(EventDialog.getRunTime());
+        if (!EventDialog.validateDuration("תרגיל", eventFields.run_time, MIN_RUN_TIME, MAX_RUN_TIME, Time.convertSecondsToHMMSS)) {
             return null;
         }
         eventFields.extra_run_distance = $('#extra_run_distance').val();
-        if (!this.validateDistance("תוספת", eventFields.extra_run_distance, MIN_EXTRA_DISTANCE, MAX_EXTRA_DISTANCE)) {
+        if (!EventDialog.validateDistance("תוספת", eventFields.extra_run_distance, MIN_EXTRA_DISTANCE, MAX_EXTRA_DISTANCE)) {
             return null;
         }
         var runType = $('#run_types').val();
-        if (runType == EventTypes.OTHER_SPORT || runType == EventTypes.REST_DAY || runType == EventTypes.EVENT_CANCELED) {
+        if (runType == EventTypes.OTHER_SPORT || runType == EventTypes.REST_DAY || runType == EventTypes.EVENT_CANCELED || runType == EventTypes.POWER) {
             eventFields.run_distance = 0;
             eventFields.run_time = 0;
             eventFields.extra_run_distance = 0;
@@ -706,15 +992,15 @@ var EventDialog = {
                     $('#run_types').trigger('change');
 
                     var fields = doc.data.event_fields;
-                    $('#run_distance').val(Time.paddWithZero(fields.run_distance));
-                    $('#run_time').val(Time.convertSecondsToHMMSS(fields.run_time));
-                    $('#extra_run_distance').val(Time.paddWithZero(fields.extra_distance));
+                    $('#run_distance').val(EventDialog.formatDecimalInput(fields.run_distance));
+                    EventDialog.setRunTime(fields.run_time);
+                    $('#extra_run_distance').val(EventDialog.formatDecimalInput(fields.extra_distance));
                     $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
                     $('#notes').val(fields.notes).elastic();
 					$('#pulse').val(fields.pulse);
 					$('#max_pulse').val(fields.max_pulse);
 					$('#elevation').val(fields.elevation);
-				 	$('#weight').val(Time.paddWithZero(fields.weight));
+                    $('#weight').val(EventDialog.formatDecimalInput(fields.weight));
                     EventDialog.calculatePace();
                 }
             }
@@ -726,7 +1012,7 @@ var EventDialog = {
      */
     runTypeChanged:function () {
         var runType = $('#run_types').val();
-        if (runType == EventTypes.OTHER_SPORT || runType == EventTypes.REST_DAY || runType == EventTypes.EVENT_CANCELED) {
+        if (runType == EventTypes.OTHER_SPORT || runType == EventTypes.REST_DAY || runType == EventTypes.EVENT_CANCELED || runType == EventTypes.POWER) {
             $('#user_courses').hide();
             $('#duration_distance_pace').hide();
 			$('#pulse_c').hide();
@@ -764,7 +1050,7 @@ var EventDialog = {
         if (courseLength != null) {
             courseLength = parseFloat(courseLength);
             if (courseLength > 0 && $('#run_distance').val() == 0){
-                $('#run_distance').val(Time.paddWithZero(courseLength.toFixed(1)));
+                $('#run_distance').val(EventDialog.formatDecimalInput(courseLength));
             }
         }
     },
@@ -781,7 +1067,7 @@ var EventDialog = {
 
     // calculates the pace values according to distance and duration and displays the values if calculation succeeds
     calculatePace:function () {
-        var run_pace = Time.calculatePace($('#run_distance').val(), Time.convertHMMSSToSeconds($('#run_time').val()));
+        var run_pace = Time.calculatePace($('#run_distance').val(), Time.convertHMMSSToSeconds(EventDialog.getRunTime()));
         $('#run_pace').html(run_pace);
     }
 };
@@ -794,20 +1080,27 @@ var Comments = {
      * @returns {string}
      */
     appendEvent: function ($container, event) {
-        var eventHtml =
-            '<div class="event">' +
-                '   <div>' +
-                '       <div class="event_type" style="background-color:' + Calendar.getEventColor(event.run_type_id) + '; border:solid 1px ' + Calendar.getEventBorderColor(event.run_type_id) + ';"></div>' +
-                '       <div class="event_title">' + Calendar.getFeedEventHtml(event) + '</div>' +
-                '   </div>' +
-                '   <div class="comments">' +
-                '       <div id="event_comments_' + event.id + '" class="list"></div>' +
-                '       <div><textarea id="event_new_comment_' + event.id + '" class="event_new_comment" placeholder="הוספת פרגון..." maxlength="2000"></textarea></div>' +
-                '   </div>' +
-                '</div>';
+        var $event = $('<div class="event"></div>');
+        var $eventBody = $('<div class="event_body"></div>');
+        var $eventAvatar = $('<div class="event_avatar" aria-hidden="true"></div>');
+        var $eventType = $('<div class="event_type"></div>');
+        var $eventTitle = $('<div class="event_title"></div>');
+        var $comments = $('<div class="comments"></div>');
+        var $commentList = $('<div class="list"></div>').attr('id', 'event_comments_' + event.id);
+        var $commentInput = $('<textarea class="event_new_comment" placeholder="&#10148;" maxlength="2000"></textarea>')
+            .attr('id', 'event_new_comment_' + event.id);
 
-        $container.append(eventHtml);
-        $('#event_new_comment_'+event.id).elastic().keypress(Comments.onNewCommentKeyPress);
+        $eventType.css({
+            'background-color':Calendar.getEventColor(event.run_type_id),
+            'border':'solid 1px ' + Calendar.getEventBorderColor(event.run_type_id)
+        });
+        $eventTitle.html(Calendar.getFeedEventHtml(event));
+        $eventBody.append($eventAvatar, $eventType, $eventTitle);
+        $comments.append($commentList, $('<div></div>').append($commentInput));
+        $event.append($eventBody, $comments);
+        $container.append($event);
+
+        $commentInput.elastic().keypress(Comments.onNewCommentKeyPress);
     },
 
     appendComment: function (comment, lastFetchedTimestamp) {
@@ -1087,6 +1380,7 @@ var Functions = {
 
     userChanged:function () {
         $('#calendar').fullCalendar('render');
+        Calendar.refreshMobileAgenda();
         EventDialog.initShoesAndCourses();
     }
 };
@@ -1416,40 +1710,30 @@ var Time = {
      *
      */
     validateHMMSS:function (timeValue) {
-        if (arguments.length != 1) {
+        if (arguments.length != 1 || typeof timeValue !== 'string') {
             return false;
         }
 
-        var hmmssRegExp = /^\d{1}:\d{2}:\d{2}$/; // h:mm:ss
+        var hmmssRegExp = /^\d{1,2}:\d{2}:\d{2}$/; // h:mm:ss or hh:mm:ss
         var fragments = timeValue.match(hmmssRegExp);
         if (fragments != null) {
-            var value = fragments[0];
+            var parts = timeValue.split(':');
+            var hour = parseInt(parts[0], 10);
+            var minutes = parseInt(parts[1], 10);
+            var seconds = parseInt(parts[2], 10);
 
-            var hoursToMinutesColonIndex = 1;
-            var minutesToSecondsColonIndex = 4;
-
-            var hourStr = value.substring(0, hoursToMinutesColonIndex);
-            var minutesStr = value.substring(hoursToMinutesColonIndex + 1,
-                minutesToSecondsColonIndex);
-            var secStr = value.substring(minutesToSecondsColonIndex + 1,
-                value.length);
-
-            var hour = parseInt(hourStr);
-            var minutes = parseInt(minutesStr);
-            var seconds = parseInt(secStr);
-
-            if (hour < 0 || hour > 9) {
+            if (isNaN(hour) || hour < 0 || hour > 99) {
                 return false;
             }
-            if (minutes < 0 || minutes > 59) {
+            if (isNaN(minutes) || minutes < 0 || minutes > 59) {
                 return false;
             }
-            if (seconds < 0 || seconds > 59) {
+            if (isNaN(seconds) || seconds < 0 || seconds > 59) {
                 return false;
             }
 
         } else {
-            return;
+            return false;
         }
         return true;
     },
@@ -1578,11 +1862,4 @@ var Time = {
 
         return year + '-' + month + '-' + day + ' 00:00:00';
     }
-
-    
 };
-
-
-function aaa() {
-    alert("Email function called!");
-}

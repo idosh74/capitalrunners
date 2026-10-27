@@ -181,7 +181,15 @@ require_once 'php/html_page_init.php';
                     </tr>
                     <tr>
                         <td><input type="text" id="run_distance"></td>
-                        <td><input type="text" id="run_time"></td>
+                        <td>
+                            <div id="run_time_fields" class="run_time_fields" role="group" aria-label="זמן">
+                                <input type="number" id="run_time_hours" min="0" max="9" step="1" inputmode="numeric" aria-label="שעות" value="0">
+                                <span aria-hidden="true">:</span>
+                                <input type="number" id="run_time_minutes" min="0" max="59" step="1" inputmode="numeric" aria-label="דקות" value="00">
+                                <span aria-hidden="true">:</span>
+                                <input type="number" id="run_time_seconds" min="0" max="59" step="1" inputmode="numeric" aria-label="שניות" value="00">
+                            </div>
+                        </td>
                         <td>
                             <div id="run_pace" class="pace"></div>
                         </td>

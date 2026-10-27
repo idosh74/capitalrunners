@@ -31,8 +31,32 @@
     width: 194px;
 }
 
-#create_update_event_dialog input[type="text"] {
+#create_update_event_dialog input[type="text"],
+#create_update_event_dialog input[type="number"] {
     width: 50px;
+}
+
+#run_time_fields {
+    display: inline-flex;
+    align-items: center;
+    direction: ltr;
+    white-space: nowrap;
+    gap: 2px;
+}
+
+#run_time_fields input[type="number"] {
+    width: 28px !important;
+    height: 20px;
+    padding: 0 2px;
+    text-align: center;
+    font-size: 12px;
+    -moz-appearance: textfield;
+}
+
+#run_time_fields input::-webkit-inner-spin-button,
+#run_time_fields input::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
 }
 
 #type_pulse {
@@ -94,9 +118,9 @@
 }
 
 .duration_distance_pace_table td {
-    width: 49px;
-    padding-left: 10px;
+    padding-left: 8px;
     padding-top: 5px;
+    vertical-align: middle;
 }
 
 .duration_distance_pace_table .pace {
