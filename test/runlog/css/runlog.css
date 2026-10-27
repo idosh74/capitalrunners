@@ -67,23 +67,13 @@ caption, th {
     position: absolute;
     top: 80px;
     left: 30px;
-    min-height: 28px;
-    box-sizing: border-box;
-    padding: 0 12px;
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    border-radius: 999px;
-    background: rgba(38, 50, 56, 0.35);
     color: #fefff5;
     text-decoration: none;
     font-size: 11px;
-    line-height: 26px;
-    text-align: center;
 }
 
 #logout:hover {
-    background: rgba(139, 211, 208, 0.9);
-    color: #17383c;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 #tabs {
@@ -440,6 +430,23 @@ table.tablesorter .active_col {
 }
 
 @media screen and (max-width: 767px) {
+    #logout {
+        min-height: 28px;
+        box-sizing: border-box;
+        padding: 0 12px;
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        border-radius: 999px;
+        background: rgba(38, 50, 56, 0.35);
+        line-height: 26px;
+        text-align: center;
+    }
+
+    #logout:hover {
+        background: rgba(139, 211, 208, 0.9);
+        color: #17383c;
+        text-decoration: none;
+    }
+
     .ui-dialog.modernDialog {
         overflow: hidden;
         border: 1px solid #c8d1d5;
