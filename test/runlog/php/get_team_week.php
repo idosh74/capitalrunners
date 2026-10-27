@@ -20,7 +20,7 @@ if (date("l",$newDate) != "Sunday"){
 $title=date("d-m-Y", strtotime($week_first_day)). " - " . date("d-m-Y", strtotime($week_last_day));
 
 try {
-	$sql = "SELECT distinct tl_events.runner_id, tl_runners.member_name as name FROM tl_events,tl_runners WHERE tl_runners.id=tl_events.runner_id AND date(tl_events.run_date) >= '" . $week_first_day . "' AND date(tl_events.run_date) <= '" . $week_last_day . "' order by tl_runners.member_name";
+	$sql = "SELECT distinct tl_events.runner_id, tl_runners.member_name as name FROM tl_events,tl_runners WHERE tl_runners.id=tl_events.runner_id AND date(tl_events.run_date) >= '" . $week_first_day . "' AND date(tl_events.run_date) <= '" . $week_last_day . "' and tl_runners.id<>18600162 order by tl_runners.member_name";
 	$stmt = $conn->query($sql);
 	$result = $stmt->fetchAll(PDO :: FETCH_ASSOC);
     if (count($result) == 0){

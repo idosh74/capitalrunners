@@ -23,7 +23,8 @@ function getDayEventsAsJSON($conn, $date) {
     JOIN tl_run_types ON tl_events.run_type_id = tl_run_types.id
     LEFT JOIN tl_rpe ON tl_events.rpe_id = tl_rpe.id
     WHERE date(tl_events.run_date) = '" . $date . "'
-    ORDER BY tl_events.id DESC";
+    ORDER BY FIELD(tl_runners.id,18600162) desc,
+    tl_events.id DESC";
 
     $stmt = $conn->query($sql);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);

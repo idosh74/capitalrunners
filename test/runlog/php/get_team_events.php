@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once 'ajax_page_init.php';
 

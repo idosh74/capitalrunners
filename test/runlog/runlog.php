@@ -5,6 +5,7 @@ require_once 'php/html_page_init.php';
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <html dir="RTL">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>רצי הבירה - יומן ריצה</title>
     <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
@@ -18,7 +19,6 @@ require_once 'php/html_page_init.php';
     <script src="./js/jquery-ui.min.js" type="text/javascript"></script>
     <script src="./js/jquery.qtip.js" type="text/javascript"></script>
     <script src="./js/jquery.elastic.js" type="text/javascript"></script>
-    <script src="./js/jquery.maskedinput.js" type="text/javascript"></script>
     <script src="./js/json2.js" type="text/javascript"></script>
     <script src="./js/fullcalendar.js?v=<?php echo JS_VERSION;?>" type="text/javascript"></script>
     <script src="./js/constants.js?v=<?php echo JS_VERSION;?>" type="text/javascript"></script>
@@ -65,11 +65,25 @@ require_once 'php/html_page_init.php';
     <input id="users1"/>
 </div>
 
-<div style="text-align:center;">
+<div class="mobileRunnerSelector" style="text-align:center;">
     <select id="users" style="" onchange="Functions.userChanged();"></select>
 </div>
 
 <div id='calendar'></div>
+<section id="mobileAgenda" aria-live="polite">
+    <div class="mobileAgendaHeader">
+        <div>
+            <p class="mobileAgendaEyebrow">יומן אימונים</p>
+            <h2>האימונים שלי</h2>
+        </div>
+        <div class="mobileAgendaActions">
+            <label for="mobileAgendaDatePicker">תאריך</label>
+            <input type="date" id="mobileAgendaDatePicker">
+            <button type="button" id="mobileAgendaAdd">הוספה</button>
+        </div>
+    </div>
+    <div id="mobileAgendaList"></div>
+</section>
 <div id="delete_dialog" title="מחיקת אימון">האם למחוק את האימון ?</div>
 
 <!-- ~~~~~~~~~~~~~~~~~~~ -->
@@ -90,13 +104,13 @@ require_once 'php/html_page_init.php';
 					<td>
 						<div id="pulse_c" style="margin-top:5px;">
 							<label for="pulse" class="label">דופק</label>
-							<input type="text" id="pulse" class="pulse">
+                            <input type="number" id="pulse" class="pulse" min="0" max="250" step="1" inputmode="numeric">
 						</div>
 					</td>
 					<td>
 						<div id="max_pulse_c" style="margin-top:5px;">
 							<label for="max_pulse" class="label">דופק מקס'</label>
-							<input type="text" id="max_pulse" class="max_pulse">
+                            <input type="number" id="max_pulse" class="max_pulse" min="0" max="250" step="1" inputmode="numeric">
 						</div>
 					</td>
 					
@@ -142,7 +156,7 @@ require_once 'php/html_page_init.php';
 					<td>
 						<div id="elevation_c" style="margin-top:5px;">
 							<label for="elevation" class="label">טיפוס</label>
-							<input type="text" id="elevation" class="elevation">
+                            <input type="number" id="elevation" class="elevation" min="0" step="1" inputmode="numeric">
 						</div>
 					</td>
 					<!--18600062 חגי-->
@@ -153,7 +167,7 @@ require_once 'php/html_page_init.php';
 					<td>
 						<div id="weight_c" style="margin-top:5px;">
 							<label for="weight" class="label">משקל</label>
-							<input type="text" id="weight" class="weight">
+                            <input type="number" id="weight" class="weight" min="0" max="300" step="0.1" inputmode="decimal">
 						</div>
 					</td>
 					<?php } ?>
@@ -178,8 +192,16 @@ require_once 'php/html_page_init.php';
                         <th>קצב</th>
                     </tr>
                     <tr>
-                        <td><input type="text" id="run_distance"></td>
-                        <td><input type="text" id="run_time"></td>
+                        <td><input type="number" id="run_distance" min="0" max="99.9" step="0.1" inputmode="decimal"></td>
+                        <td>
+                            <div id="run_time_fields" class="run_time_fields" role="group" aria-label="זמן">
+                                <input type="number" id="run_time_hours" min="0" max="9" step="1" inputmode="numeric" aria-label="שעות" value="0">
+                                <span aria-hidden="true">:</span>
+                                <input type="number" id="run_time_minutes" min="0" max="59" step="1" inputmode="numeric" aria-label="דקות" value="00">
+                                <span aria-hidden="true">:</span>
+                                <input type="number" id="run_time_seconds" min="0" max="59" step="1" inputmode="numeric" aria-label="שניות" value="00">
+                            </div>
+                        </td>
                         <td>
                             <div id="run_pace" class="pace"></div>
                         </td>
@@ -202,7 +224,7 @@ require_once 'php/html_page_init.php';
                         <th>תוספת מרחק (חימום ושחרור)</th>
                     </tr>
                     <tr>
-                        <td><input type="text" id="extra_run_distance"></td>
+                        <td><input type="number" id="extra_run_distance" min="0" max="99.9" step="0.1" inputmode="decimal"></td>
                     </tr>
                 </table>
 
@@ -218,7 +240,7 @@ require_once 'php/html_page_init.php';
         </div>
 
         <!-- Notes -->
-        <div style="margin-top:20px;">
+        <div class="mobileWorkoutNotes" style="margin-top:20px;">
             <div class="label">פרטים</div>
             <div id="notesContainer" style="float:right;"></div>
         </div>

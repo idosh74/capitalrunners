@@ -48,7 +48,6 @@ function getEventFields() {
 	eventFields.shoe_id = $('#shoesSelect').val();
 	eventFields.course_id = $('#courseSelect').val();
 	eventFields.run_type_id = $('#run_types').val();
-	eventFields.rpe = $('#rpe').val();
 	eventFields.share = $('#share').attr('checked');
 	return eventFields;
 }

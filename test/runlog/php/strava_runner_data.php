@@ -44,7 +44,9 @@ $runner_id = $memberAuthentication->getMemberId();
 //echo "--->  $runner_id";
 try {
     $conn = getConnection();
-    $sql = "SELECT * from tl_runners where tl_runners.id = '" . $runner_id . "';" ; 
+    //$sql = "SELECT * from tl_runners where tl_runners.id = '" . $runner_id . "';" ; 
+    $sql = "SELECT id,member_name,member_num,s_client_id,s_client_secret,s_refresh_token,member_log_date,city,street,zipcode,birthday,email,phone,mobile,m_pic,m_bigpic,m_top800,m_top1500,m_top3000,m_top5000,m_top10000,m_top10k,m_tophm,m_topm,m_ocup,m_text,m_show_profile from tl_runners where tl_runners.id = '" . $runner_id . "';" ; 
+    //id,member_name,member_num,s_client_id,s_client_secret,s_refresh_token,member_log_date,city,street,zipcode,birthday,email,phone,mobile,m_pic,m_bigpic,m_top800,m_top1500,m_top3000,m_top5000,m_top10000,m_top10k,m_tophm,m_topm,m_ocup,m_text,m_show_profile
     $stmt = $conn->query($sql);
     $result = $stmt->fetchAll(PDO :: FETCH_ASSOC);
     echo returnJSONsuccess($result);

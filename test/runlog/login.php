@@ -44,7 +44,8 @@ require_once 'php/html_page_init.php';
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <html dir="RTL">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>רצי הבירה - כניסה</title>
 <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
 <link href='./css/runlog.css?v=<?php echo CSS_VERSION;?>' rel='stylesheet' type='text/css'/>
@@ -102,6 +103,59 @@ require_once 'php/html_page_init.php';
     {
         color: #8b0000;
     }
+
+    @media screen and (max-width: 767px) {
+        body {
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        #loginContainer {
+            width: calc(100% - 24px);
+            margin-top: 42px;
+            padding: 16px 12px;
+            box-sizing: border-box;
+        }
+
+        #login {
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        .formRow {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            margin-top: 12px;
+        }
+
+        .formRowCaption {
+            display: block;
+            width: auto;
+            margin-bottom: 6px;
+            text-align: right;
+        }
+
+        #memberEmail,
+        #memberPassword {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        #rememberMeRow {
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        #login input[type="submit"] {
+            width: 100%;
+            min-height: 42px;
+        }
+    }
 </style>
 </head>
 <body>
@@ -119,7 +173,7 @@ require_once 'php/html_page_init.php';
             <div class="formRow">
                 <span id="errorMsg" <?php if (!$loginError) {?>style="display:none;"<?php } ?>>אימייל או סיסמא שגויים</span>
             </div>
-            <div class="formRow">
+            <div class="formRow" id="rememberMeRow">
                 <input type="checkbox" id="rememberMe" name="rememberMe" <?php if ($rememberMe){ ?>checked<?php } ?>>
                 <label for="rememberMe">זכור אותי במחשב זה</label>
             </div>

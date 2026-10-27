@@ -7,9 +7,10 @@ $coach = $memberAuthentication->isCoach();
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <html dir="RTL">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>רצי הבירה - ניהול</title>
-<link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
+<link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.18.1/build/cssreset-context/cssreset-context-min.css">
 <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <link href='./css/runlog.css?v=<?php echo CSS_VERSION;?>' rel='stylesheet' type='text/css'/>
 
@@ -107,7 +108,6 @@ function openUserDialog(userName, userMemberNum, userEmail, userId, birthDate, a
 		$('#show_weight').prop('checked', false);
 	}
     $('#user_id').val(userId);
-    $('#create_user_dialog').css('background-color', '#feffe5');
     $("#create_user_dialog").dialog({ title: dialogTitle });
     $("#create_user_dialog").dialog("open");
 }
@@ -137,6 +137,7 @@ $(document).ready(function() {
             direction : 'rtl'
         },
         autoOpen: false,
+        dialogClass: 'modernDialog',
         buttons : {
             "אשר" : function() {
                 var user = getUser();
@@ -200,13 +201,85 @@ $(document).ready(function() {
 #create_user_dialog select {
     width: 158px;
 }
+
+@media screen and (max-width: 767px) {
+    .users_page {
+        width: auto !important;
+        margin: 0 14px !important;
+    }
+
+    .users_page .page_header {
+        display: block;
+        margin: 18px 0 12px;
+        color: #263238;
+        font-size: 22px;
+    }
+
+    .users_add_button {
+        min-height: 40px;
+        padding: 0 16px;
+        border: 1px solid #1f6f78;
+        border-radius: 999px;
+        background: #1f6f78;
+        color: #ffffff;
+        font: inherit;
+        font-weight: bold;
+    }
+
+    #data {
+        margin-top: 18px !important;
+        overflow-x: auto;
+        direction: ltr;
+    }
+
+    #users_table {
+        width: 100%;
+        min-width: 520px;
+        table-layout: fixed;
+        direction: rtl;
+    }
+
+    #users_table th,
+    #users_table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    #create_user_dialog {
+        box-sizing: border-box;
+        padding: 14px !important;
+    }
+
+    #create_user_dialog .label,
+    #create_user_dialog .active_col,
+    #create_user_dialog .weight_col {
+        display: block;
+        width: auto;
+        margin-bottom: 5px;
+        font-size: 12px;
+    }
+
+    #create_user_dialog input:not([type="hidden"], [type="checkbox"]),
+    #create_user_dialog select {
+        width: 100%;
+        min-height: 38px;
+        box-sizing: border-box;
+        font-size: 15px;
+    }
+
+    .ui-dialog {
+        max-width: 92vw !important;
+    }
+}
 </style>
 </head>
 
 <body>
     <?php require 'widgets/header.php'; ?>
 
-    <div class="RunLog" class="ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
+    <div class="RunLog ui-widget users_page" style="width:920px; margin-left:auto; margin-right:auto;">
         <!--<iframe id="ifrm"  width=920px height=700px src="https://www.cp-runners.com/strava/"></iframe>-->
         <div id="create_user_dialog">
             <form>
@@ -257,7 +330,7 @@ $(document).ready(function() {
         
 					if ($admin) {
 					?>
-                    <input type="button" onclick="openCreateUserDialog()" value="הוסף משתמש" style="margin-top:20px;">					
+					<input class="users_add_button" type="button" onclick="openCreateUserDialog()" value="הוסף משתמש" style="margin-top:20px;">
 		<?php } ?>
         
         <div id="data" style="margin-top:20px;">

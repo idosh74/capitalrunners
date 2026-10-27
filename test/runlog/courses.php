@@ -3,6 +3,7 @@ require_once 'php/html_page_init.php';
 ?>
 <!DOCTYPE HTML>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <html dir="RTL">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -91,7 +92,6 @@ function openCourseDialog(courseName, courseLength, courseDescription, courseId)
     $('#descriptionContainer').empty().append('<textarea id="description" maxlength="255"></textarea>');
     $('#description').val(courseDescription).elastic();
     $('#course_id').val(courseId);
-    $('#create_course_dialog').css('background-color', '#feffe5');
     $("#create_course_dialog").dialog({ title: dialogTitle });
     $("#create_course_dialog").dialog("open");
 }
@@ -138,6 +138,7 @@ $(document).ready(function() {
             direction : 'rtl'
         },
         autoOpen: false,
+        dialogClass: 'modernDialog',
         buttons : {
             "אשר" : function() {
                 var course = getCourse();
@@ -205,12 +206,47 @@ $(document).ready(function() {
     padding: 0 3px;
     max-height: 86px;
 }
+
+@media screen and (max-width: 767px) {
+    .courses_page {
+        width: auto !important;
+        margin: 0 14px !important;
+    }
+
+    .courses_page .page_header {
+        display: block;
+        margin: 18px 0 12px;
+        color: #263238;
+        font-size: 22px;
+    }
+
+    .courses_page #data {
+        margin-top: 18px !important;
+        overflow-x: auto;
+        direction: ltr;
+    }
+
+    .courses_page #user_courses_table {
+        width: 100%;
+        min-width: 520px;
+        table-layout: fixed;
+        direction: rtl;
+    }
+
+    .courses_page #user_courses_table th,
+    .courses_page #user_courses_table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        white-space: normal;
+        word-break: break-word;
+    }
+}
 </style>
 </head>
 <body>
     <?php require 'widgets/header.php'; ?>
 
-    <div class="RunLog" class="ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
+    <div class="RunLog courses_page ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
         <div id="create_course_dialog">
             <form>
                 <div style="margin-top:15px;">
@@ -233,7 +269,7 @@ $(document).ready(function() {
         </div>
 
         <h2 class="page_header">המסלולים שלי</h2>
-        <input type="button" onclick="openCreateCourseDialog()" value="הוסף מסלול" style="margin-top:20px;">
+        <input class="courses_add_button" type="button" onclick="openCreateCourseDialog()" value="הוסף מסלול" style="margin-top:20px;">
 
         <div id="data" style="margin-top:20px;">
             <table id="user_courses_table" class="tablesorter">

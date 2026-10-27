@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $sent_cookies = $_COOKIE;
 session_start();
 ?>

@@ -6,7 +6,7 @@ require_once 'php/html_page_init.php';
 <html dir="RTL">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>הרוח השניה - Strava</title>
+<title>רצי הבירה - Strava</title>
 <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
 <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <link href='./css/runlog.css?v=<?php echo CSS_VERSION;?>' rel='stylesheet' type='text/css'/>
@@ -22,13 +22,14 @@ require_once 'php/html_page_init.php';
 
 
 
+
 </head>
 
 <body>
     <?php require 'widgets/header.php'; header('Access-Control-Allow-Origin: *'); ?>
 
     <div class="RunLog" class="ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
-        <iframe id="ifrm"  width=920px height=700px src="https://www.cp-runners.com/test/runlog/strava/"></iframe>
+        <iframe id="ifrm"  width=920px height=700px src="https://www.cp-runners.com/strava/"></iframe>
     </div>
 </body>
 </html>

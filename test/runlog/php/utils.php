@@ -121,9 +121,7 @@ function getTopLevelBacktrace($backtrace)
  */
 function getConnection() {
     global $HOSTNAME, $DBNAME, $USERNAME, $PASSWORD;
-    $conn = new PDO("mysql:host=$HOSTNAME;dbname=$DBNAME", "$USERNAME", "$PASSWORD", array (
-        PDO :: MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-    ));
+    $conn = new PDO("mysql:host=$HOSTNAME;dbname=$DBNAME;charset=utf8mb4", "$USERNAME", "$PASSWORD");
     $conn->setAttribute(PDO :: ATTR_ERRMODE, PDO :: ERRMODE_EXCEPTION);
     return $conn;
 }

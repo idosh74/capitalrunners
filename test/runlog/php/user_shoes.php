@@ -72,7 +72,7 @@ function getShoeDistance($shoeId) {
             $distance = '0.0';
         }
 
-        return $distance;
+        return ROUND($distance, 1);
     } catch (PDOException $e) {
         die(getErrorStatusWithDummyData($e->getMessage()));
     }
