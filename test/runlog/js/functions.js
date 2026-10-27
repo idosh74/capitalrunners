@@ -50,19 +50,40 @@ var Calendar = {
             Calendar.handleClickDay(date, true, null, null);
         });
 
+        Calendar.mobileMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        $('#mobileAgendaPrev').click(function () {
+            Calendar.shiftMobileMonth(-1);
+        });
+        $('#mobileAgendaNext').click(function () {
+            Calendar.shiftMobileMonth(1);
+        });
+        $('#mobileAgendaMonth').change(function () {
+            var parts = $(this).val().split('-');
+            if (parts.length != 2) {
+                return;
+            }
+            Calendar.mobileMonth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+            Calendar.refreshMobileAgenda();
+        });
+
+        Calendar.refreshMobileAgenda();
+    },
+
+    shiftMobileMonth:function (delta) {
+        var month = Calendar.mobileMonth;
+        Calendar.mobileMonth = new Date(month.getFullYear(), month.getMonth() + delta, 1);
         Calendar.refreshMobileAgenda();
     },
 
     refreshMobileAgenda:function () {
-        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches || !Calendar.mobileMonth) {
             return;
         }
 
-        var today = new Date();
-        var start = new Date(today.getTime());
-        var end = new Date(today.getTime());
-        start.setDate(start.getDate() - 30);
-        end.setDate(end.getDate() + 30);
+        var start = new Date(Calendar.mobileMonth.getTime());
+        var end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+        var monthValue = start.getFullYear() + '-' + (start.getMonth() < 9 ? '0' : '') + (start.getMonth() + 1);
+        $('#mobileAgendaMonth').val(monthValue);
 
         Calendar.fetchMobileEvents(start, end);
     },

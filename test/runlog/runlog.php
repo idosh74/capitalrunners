@@ -82,6 +82,11 @@ require_once 'php/html_page_init.php';
             <button type="button" id="mobileAgendaAdd">הוספה</button>
         </div>
     </div>
+    <div class="mobileAgendaMonthNav">
+        <button type="button" id="mobileAgendaPrev">&rsaquo; הקודם</button>
+        <input type="month" id="mobileAgendaMonth" aria-label="חודש">
+        <button type="button" id="mobileAgendaNext">הבא &lsaquo;</button>
+    </div>
     <div id="mobileAgendaList"></div>
 </section>
 <div id="delete_dialog" title="מחיקת אימון">האם למחוק את האימון ?</div>
