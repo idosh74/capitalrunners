@@ -9,6 +9,36 @@ $.ajaxSetup({
     }
 });
 
+var TextLimit = {
+    NOTES_MAX:20000,
+    COMMENT_MAX:2000,
+
+    // shows a live warning under the textarea when the text exceeds the limit
+    attach:function ($textarea, max) {
+        $textarea.data('textLimit', max);
+        var $warning = $('<div class="text_limit_warning" style="display:none;color:#c62828;font-size:12px;margin-top:2px;"></div>');
+        $textarea.after($warning);
+        $textarea.on('input keyup paste change', function () {
+            setTimeout(function () {
+                var length = $textarea.val().length;
+                if (length > max) {
+                    $warning.text('הטקסט ארוך מדי (' + length + ' מתוך ' + max + ' תווים). יש לקצר לפני השמירה.').show();
+                } else {
+                    $warning.hide();
+                }
+            }, 0);
+        });
+    },
+
+    exceeds:function (text, max) {
+        return text != null && text.length > max;
+    },
+
+    alertTooLong:function (text, max) {
+        alert('הטקסט ארוך מדי (' + text.length + ' תווים, המקסימום הוא ' + max + '). יש לקצר את הטקסט. הנתונים לא נשמרו.');
+    }
+};
+
 var SaveHelper = {
     failMessage:function (prefix, xhr) {
         var reason = 'שגיאת תקשורת עם השרת';
@@ -728,8 +758,9 @@ var EventDialog = {
         $('#run_pace').text('');
         $('#extra_run_distance').val('0');
 
-        $('#notesContainer').empty().append('<textarea id="notes" maxlength="20000"></textarea>');
+        $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
         $('#notes').val('').elastic();
+        TextLimit.attach($('#notes'), TextLimit.NOTES_MAX);
 		$('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
@@ -1014,6 +1045,10 @@ var EventDialog = {
         }
         eventFields.run_type_id = $('#run_types').val();
         eventFields.notes = $('#notes').val();
+        if (TextLimit.exceeds(eventFields.notes, TextLimit.NOTES_MAX)) {
+            TextLimit.alertTooLong(eventFields.notes, TextLimit.NOTES_MAX);
+            return null;
+        }
         eventFields.runner_id = $('#users').val();
 		eventFields.pulse = $('#pulse').val();
 		eventFields.max_pulse = $('#max_pulse').val();
@@ -1061,8 +1096,9 @@ var EventDialog = {
                     $('#run_distance').val(EventDialog.formatDecimalInput(fields.run_distance));
                     EventDialog.setRunTime(fields.run_time);
                     $('#extra_run_distance').val(EventDialog.formatDecimalInput(fields.extra_distance));
-                    $('#notesContainer').empty().append('<textarea id="notes" maxlength="20000"></textarea>');
+                    $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
                     $('#notes').val(fields.notes).elastic();
+                    TextLimit.attach($('#notes'), TextLimit.NOTES_MAX);
 					$('#pulse').val(fields.pulse);
 					$('#max_pulse').val(fields.max_pulse);
 					$('#elevation').val(fields.elevation);
@@ -1154,7 +1190,7 @@ var Comments = {
         var $comments = $('<div class="comments"></div>');
         var $commentList = $('<div class="list"></div>').attr('id', 'event_comments_' + event.id);
         var isMobileView = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-        var $commentInput = $('<textarea class="event_new_comment" maxlength="2000"></textarea>')
+        var $commentInput = $('<textarea class="event_new_comment"></textarea>')
             .attr('placeholder', isMobileView ? '\u27A4' : 'הוספת פרגון...')
             .attr('id', 'event_new_comment_' + event.id);
 
@@ -1169,6 +1205,7 @@ var Comments = {
         $container.append($event);
 
         $commentInput.elastic().keypress(Comments.onNewCommentKeyPress);
+        TextLimit.attach($commentInput, TextLimit.COMMENT_MAX);
     },
 
     appendComment: function (comment, lastFetchedTimestamp) {
@@ -1216,6 +1253,11 @@ var Comments = {
     createComment: function ($commentTextarea) {
         var eventId = $commentTextarea.attr('id').replace('event_new_comment_', '');
         var comment = $commentTextarea.val();
+
+        if (TextLimit.exceeds(comment, TextLimit.COMMENT_MAX)) {
+            TextLimit.alertTooLong(comment, TextLimit.COMMENT_MAX);
+            return;
+        }
 
         if (comment) {
             var eventComment = {
@@ -1324,9 +1366,11 @@ var Comments = {
         var $comment = $eventComments.find('#event_comment_' + commentId);
         var commentText = $comment.find('#event_comment_inner_' + commentId).text();
 
-        var $editCommentTextarea = jQuery('<textarea id="event_edit_comment_' + eventId + '_' + commentId + '" class="event_edit_comment" maxlength="2000" data-original-comment="' + commentText + '">' + commentText + '</textarea>');
+        var $editCommentTextarea = jQuery('<textarea id="event_edit_comment_' + eventId + '_' + commentId + '" class="event_edit_comment" data-original-comment="' + commentText + '">' + commentText + '</textarea>');
         $comment.html($editCommentTextarea);
         $editCommentTextarea.elastic().keydown(Comments.onEditCommentKeyDowm).blur(function(e){Comments.undoUpdateComment($(e.target));});
+        TextLimit.attach($editCommentTextarea, TextLimit.COMMENT_MAX);
+        $editCommentTextarea.trigger('input');
         var commentLength = $editCommentTextarea.text().length;
         $editCommentTextarea[0].setSelectionRange(commentLength, commentLength);
     },
@@ -1336,6 +1380,11 @@ var Comments = {
         var eventId = eventAndCommentIds[0];
         var commentId = eventAndCommentIds[1];
         var comment = $commentTextarea.val();
+
+        // no alert here: it would blur the textarea and undo the edit; the inline warning is shown instead
+        if (TextLimit.exceeds(comment, TextLimit.COMMENT_MAX)) {
+            return;
+        }
 
         if (comment) {
             $.ajax({
