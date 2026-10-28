@@ -153,6 +153,9 @@ require_once 'php/html_page_init.php';
     }
 
     function showNewComments(){
+        if (!gTeamCommentsLastFetched) {
+            return;
+        }
         $('#team_events_header').hide();
         $('#show_new_comments_action').hide();
         hideActionLink();

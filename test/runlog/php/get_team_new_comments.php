@@ -2,8 +2,9 @@
 
 require_once 'ajax_page_init.php';
 $runnerId = $memberAuthentication->getMemberId();
-$timestamp = '0000-00-00 00:00:00';
-if (isset($_GET['timestamp'])){
+// an invalid/missing timestamp must not turn into "all comments ever"
+$timestamp = date("Y-m-d H:i:s", strtotime('-2 day'));
+if (isset($_GET['timestamp']) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $_GET['timestamp'])){
     $timestamp = $_GET['timestamp'];
 }
 
@@ -19,7 +20,8 @@ try {
         AND tl_comments.runner_id != '" . $runnerId . "'
         AND tl_comments.timestamp >= '" . $timestamp . "'
         AND tl_events.id = tl_comments.event_id
-    ORDER BY date(tl_events.run_date) DESC, tl_events.id DESC";
+    ORDER BY date(tl_events.run_date) DESC, tl_events.id DESC
+    LIMIT 100";
 
     $stmt = $conn->query($sql);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
