@@ -170,6 +170,10 @@ require_once 'php/html_page_init.php';
             data: {
                 timestamp: gTeamCommentsLastFetched
             },
+            error: function () {
+                alert("get team new comments - request failed");
+                showAllComments();
+            },
             success: function (txt) {
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
@@ -177,6 +181,9 @@ require_once 'php/html_page_init.php';
                 }
                 else {
                     var runDate = null;
+                    if (!doc.data['events'] || doc.data['events'].length == 0) {
+                        feed.append('<div class="event">אין פירגונים חדשים</div>');
+                    }
                     for (var i in doc.data['events']){
                         var event = doc.data['events'][i];
                         if (event['run_date'] != runDate){

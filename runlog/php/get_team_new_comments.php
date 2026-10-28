@@ -29,13 +29,19 @@ try {
         $eventIds[] = $event['id'];
     }
 
+    if (count($eventIds) == 0) {
+        $conn = null;
+        echo returnJSONsuccess(array('events' => array(), 'comments' => array()));
+        exit;
+    }
+
     $sql =
 
 "SELECT events.id AS event_id, comments.id AS comment_id, comments.runner_id, runners.member_name AS 'commenter_name', COALESCE(comments.comment, '') AS comment, comments.timestamp AS timestamp
      FROM tl_events events
         JOIN tl_comments comments ON events.id=comments.event_id
         JOIN tl_runners runners ON comments.runner_id = runners.id
-     WHERE events.id IN (".implode(',', $eventIds).")
+     WHERE events.id IN (".implode(',', array_map('intval', $eventIds)).")
      ORDER BY events.run_date DESC, events.id DESC, comments.id ASC";
 
     $stmt = $conn->query($sql);
