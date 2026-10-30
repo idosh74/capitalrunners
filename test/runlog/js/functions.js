@@ -646,7 +646,7 @@ var EventFormatter = {
     getTotalDistance:function (warmupDistance, runDistance, cooldownDistance, runTypeId) {
 
         var runDistanceNum = parseFloat(runDistance);
-        if (isNaN(runDistanceNum) || runDistanceNum <= 0 || runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED || runTypeId == EventTypes.POWER) {
+        if (isNaN(runDistanceNum) || runDistanceNum < 0.05 || runTypeId == EventTypes.OTHER_SPORT || runTypeId == EventTypes.REST_DAY || runTypeId == EventTypes.EVENT_CANCELED || runTypeId == EventTypes.POWER) {
             return null;
         }
         else {
@@ -671,7 +671,7 @@ var EventFormatter = {
             runTimeNum = 0;
         }
 
-        if (runDistanceNum <= 0 && runTimeNum <= 0) {
+        if (runDistanceNum < 0.05 && runTimeNum <= 0) {
             return null;
         }
 
