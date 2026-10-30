@@ -174,6 +174,11 @@ var Calendar = {
             return;
         }
 
+        events = events.slice().sort(function (a, b) {
+            var aStart = String(a.start || ''), bStart = String(b.start || '');
+            return aStart < bStart ? 1 : (aStart > bStart ? -1 : (b.id - a.id));
+        });
+
         var currentDate = '';
         var renderedEvents = 0;
         $.each(events, function (index, item) {
@@ -1270,6 +1275,10 @@ var Comments = {
 
         if (comment.is_coach == 1) {
             commentCssClass += ' coach_comment';
+        }
+
+        if (comment.commenter_name == gMemberName) {
+            commentCssClass += ' my_comment';
         }
 
         var commentHtml =

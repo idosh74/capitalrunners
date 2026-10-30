@@ -827,6 +827,10 @@ var Comments = {
             commentCssClass += ' new_comment';
         }
 
+        if (comment.commenter_name == gMemberName) {
+            commentCssClass += ' my_comment';
+        }
+
         var commentHtml =
             '<div class="' + commentCssClass + '" id="event_comment_' + comment.comment_id + '">' +
                 Comments.getCommentHtml(comment.event_id, comment.comment_id, comment.commenter_name, comment.comment)  +

@@ -344,6 +344,12 @@ table.tablesorter .active_col {
     border-radius: 4px;
 }
 
+#feed .day_events .event .comments .my_comment {
+    background-color: #e3ecfb;
+    border-right: 4px solid #3b6fd4;
+    border-radius: 4px;
+}
+
 #feed .day_events .event .comments .comment .menu_btn {
     position: absolute;
     right: 337px;
