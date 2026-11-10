@@ -7,6 +7,7 @@
  */
 
 require_once 'ajax_page_init.php';
+require_once 'shoe_distances.php';
 
 $runner_id = $memberAuthentication->getMemberId();
 $validationResult = validatePositiveInt($runner_id);
@@ -26,54 +27,10 @@ function getUserShoesRecords($conn,$runner_id) {
     $sql = "SELECT tl_shoes.id as id, tl_shoes.start_using_date as start_using_date, tl_shoes.active as active, tl_shoes.shoe_name as name, tl_shoe_types.id as type_id, tl_shoe_types.type as type_name FROM  tl_shoes,tl_shoe_types WHERE runner_id = '" . $runner_id . "' and tl_shoes.type=tl_shoe_types.id order by tl_shoes.active DESC, tl_shoes.start_using_date DESC";
     $stmt = $conn->query($sql);
     $result = $stmt->fetchAll(PDO :: FETCH_ASSOC);
-    // loop over the result and get the shoe distance  for each shoe
+    $distances = getShoesDistances($conn, array_column($result, 'id'));
     for($i = 0; $i < sizeof($result); ++$i) {
         $shoeId = $result[$i]['id'];
-        $distance = getShoeDistance($shoeId);
-        $result[$i]['distance'] = $distance;
+        $result[$i]['distance'] = isset($distances[$shoeId]) ? $distances[$shoeId] : 0.0;
     }
     return returnJSONsuccess($result);
-}
-
-/**
- * Get the shoe 'distance' - the mileage that a runner did on a specific shoe
- */
-function getShoeDistance($shoeId) {
-    try {
-        $conn = getConnection();
-        $sql = "SELECT
-                        ROUND((run_distance), 1) as run_distance,
-                        ROUND((warmup_distance) + (cooldown_distance), 1) as extra_run_distance,
-                        shoe_id,
-                        extra_shoe_id
-                    FROM  tl_events
-                        WHERE shoe_id = :shoe_id OR extra_shoe_id = :shoe_id";
-        $sth = $conn->prepare($sql);
-        $ok = $sth->execute(array (
-            ':shoe_id' => $shoeId
-        ));
-        $results = $sth->fetchAll(PDO::FETCH_ASSOC);
-        $conn = null;
-
-        $distance = 0;
-        foreach ($results as $result) {
-            if ($result['shoe_id'] == $shoeId) {
-                $distance += $result['run_distance'];
-            }
-            if ($result['extra_shoe_id'] == $shoeId) {
-                $distance += $result['extra_run_distance'];
-            }
-            if ($result['shoe_id'] == $shoeId && $result['extra_shoe_id'] == null) {
-                $distance += $result['extra_run_distance'];
-            }
-        }
-
-        if (empty($distance)) {
-            $distance = '0.0';
-        }
-
-        return ROUND($distance, 1);
-    } catch (PDOException $e) {
-        die(getErrorStatusWithDummyData($e->getMessage()));
-    }
 }
