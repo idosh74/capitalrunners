@@ -1064,7 +1064,8 @@ var Comments = {
     appendEvent: function ($container, event) {
         var eventHtml =
             '<div class="event">' +
-                '   <div>' +
+                '   <div class="event_body">' +
+                '       <div class="event_avatar" aria-hidden="true"></div>' +
                 '       <div class="event_type" style="background-color:' + Calendar.getEventColor(event.run_type_id) + '; border:solid 1px ' + Calendar.getEventBorderColor(event.run_type_id) + ';"></div>' +
                 '       <div class="event_title">' + Calendar.getFeedEventHtml(event) + '</div>' +
                 '   </div>' +
