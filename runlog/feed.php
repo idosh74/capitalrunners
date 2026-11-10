@@ -28,6 +28,7 @@ require_once 'php/html_page_init.php';
     var gIsCoach = <?php echo $memberAuthentication->isCoach() == 1 ? 'true' : 'false'; ?>;
     var gTeamCommentsLastFetched = null;
     var gCountNewTeamComments = 0;
+    var feedGeneration = 0;
 	var runnerId = "<?php echo $memberAuthentication->getMemberId(); ?>"; 
 
     if (jQuery.browser.msie && jQuery.browser.version.indexOf("8.") == 0) {
@@ -44,6 +45,7 @@ require_once 'php/html_page_init.php';
         feedQueueLock = true;
 
         var day = feedQueue.shift();
+        var requestGeneration = feedGeneration;
         $.ajax({
             url: 'php/get_daily_feed.php',
             dataType: 'text',
@@ -51,6 +53,7 @@ require_once 'php/html_page_init.php';
                 date: Time.hebDateToSqlDate(Time.jsDateToHebDate(day))
             },
             success: function (txt) {
+                if (requestGeneration !== feedGeneration) return;
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
                     alert("Fetch events failed - " + doc.status.emessage);
@@ -82,6 +85,11 @@ require_once 'php/html_page_init.php';
                 else {
                     onFeedScroll();
                 }
+            },
+            error: function () {
+                if (requestGeneration !== feedGeneration) return;
+                feedQueueLock = false;
+                alert("Fetch events failed - request failed");
             }
         });
     }
@@ -120,7 +128,21 @@ require_once 'php/html_page_init.php';
         getJustMyDayEvents();
     }
 
-   
+    function jumpToFeedDate()
+    {
+        var selectedDate = $('#feedDatePicker').val();
+        if (!selectedDate) {
+            alert('יש לבחור תאריך');
+            return;
+        }
+        var targetDate = new Date(selectedDate + 'T12:00:00');
+        if (isNaN(targetDate.getTime())) {
+            alert('תאריך לא תקין');
+            return;
+        }
+        showAllComments(targetDate);
+        window.scrollTo(0, 0);
+    }
 
     function getTeamCommentsStatus(){
         $.ajax({
@@ -158,6 +180,7 @@ require_once 'php/html_page_init.php';
         if (!gTeamCommentsLastFetched) {
             return;
         }
+        var requestGeneration = ++feedGeneration;
         $('#team_events_header').hide();
         $('#show_new_comments_action').hide();
         hideActionLink();
@@ -176,10 +199,12 @@ require_once 'php/html_page_init.php';
                 timestamp: gTeamCommentsLastFetched
             },
             error: function () {
+                if (requestGeneration !== feedGeneration) return;
                 alert("get team new comments - request failed");
                 showAllComments();
             },
             success: function (txt) {
+                if (requestGeneration !== feedGeneration) return;
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
                     alert("get team new comments - " + doc.status.emessage);
@@ -214,7 +239,8 @@ require_once 'php/html_page_init.php';
         });
     }
 	
-	function showAllComments(){
+	function showAllComments(targetDate){
+        feedGeneration++;
         $('#team_events_header').show();
         $('#show_new_comments_action').hide();
 		$('#show_my_comments_action').show();
@@ -228,19 +254,24 @@ require_once 'php/html_page_init.php';
 
         $('#new_comments_header').hide();
         $('#show_all_events_label').hide();
-        $(window).scroll(onFeedScroll);
+        $(window).off('scroll', onFeedScroll).on('scroll', onFeedScroll);
 
         $('#show_more').show();
 
         feed.empty();
         feedQueue = [];
+        myFeedQueue = [];
         feedQueueLock = false;
-        date = new Date();
+        date = targetDate instanceof Date ? new Date(targetDate) : new Date();
         feedQueue.push(new Date(date));
         getDayEvents();
     }
 	
 	function showMyComments(){	
+        feedGeneration++;
+        $(window).off('scroll', onFeedScroll);
+        feedQueue = [];
+        myFeedQueue = [];
 		
         $('#show_new_comments_action').hide();
 		$('#show_my_comments_action').hide();
@@ -265,6 +296,10 @@ require_once 'php/html_page_init.php';
     }
 
     function showJustMyComments(){	
+        feedGeneration++;
+        $(window).off('scroll', onFeedScroll);
+        feedQueue = [];
+        myFeedQueue = [];
 		
         $('#show_new_comments_action').hide();
 		$('#show_my_comments_action').hide();  
@@ -289,6 +324,10 @@ require_once 'php/html_page_init.php';
     }
 
     function showWeekPlan(){	
+        feedGeneration++;
+        $(window).off('scroll', onFeedScroll);
+        feedQueue = [];
+        myFeedQueue = [];
 		
         $('#show_new_comments_action').hide();
 		$('#show_my_comments_action').hide(); 
@@ -321,6 +360,7 @@ require_once 'php/html_page_init.php';
         feedQueueLock = true;
   
         var day =   myFeedQueue.shift();
+        var requestGeneration = feedGeneration;
 		untilDate = new Date(day);
         untilDate.setDate(untilDate.getDate() + 30);
         $.ajax({
@@ -332,6 +372,7 @@ require_once 'php/html_page_init.php';
 				runnerId: runnerId
             },
             success: function (txt) {
+                if (requestGeneration !== feedGeneration) return;
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
                     alert("Fetch events failed - " + doc.status.emessage);
@@ -376,6 +417,7 @@ require_once 'php/html_page_init.php';
         feedQueueLock = true;
   
         var day =   myFeedQueue.shift();
+        var requestGeneration = feedGeneration;
 		untilDate = new Date(day);
         untilDate.setDate(untilDate.getDate() + 30);
         $.ajax({
@@ -387,6 +429,7 @@ require_once 'php/html_page_init.php';
 				runnerId: runnerId
             },
             success: function (txt) {
+                if (requestGeneration !== feedGeneration) return;
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
                     alert("Fetch events failed - " + doc.status.emessage);
@@ -431,6 +474,7 @@ require_once 'php/html_page_init.php';
         feedQueueLock = true;
   
         var day =   myFeedQueue.shift();
+        var requestGeneration = feedGeneration;
 		untilDate = new Date(day);
         untilDate.setDate(untilDate.getDate() + 30);
         $.ajax({
@@ -442,6 +486,7 @@ require_once 'php/html_page_init.php';
 				runnerId: runnerId
             },
             success: function (txt) {
+                if (requestGeneration !== feedGeneration) return;
                 var doc = Utils.parseJSON(txt);
                 if (doc.status.ecode == STATUS_ERR) {
                     alert("Fetch events failed - " + doc.status.emessage);
@@ -1002,6 +1047,11 @@ require_once 'php/html_page_init.php';
 <?php require 'widgets/header.php'; ?>
 <div class="content">
     <h2 id="team_events_header" class="page_header">מה עשו החבר'ה</h2>
+    <div class="feed_jump">
+        <label for="feedDatePicker">קפיצה לתאריך</label>
+        <input type="date" id="feedDatePicker">
+        <button type="button" onclick="jumpToFeedDate();">הצג</button>
+    </div>
     <h2 id="new_comments_header" class="page_header" style="display:none;">פירגונים חדשים</h2>
     <div id="feed_actions" class="feed_actions">
     <a id="show_new_comments_action" href="#" onclick="showNewComments(); return false;" style="display:none;">הצג פירגונים חדשים</a>
