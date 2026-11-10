@@ -10,6 +10,7 @@ if (!$admin){
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <html dir="RTL">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>רצי הבירה - מרוצים</title>
 <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
@@ -50,13 +51,13 @@ function populateRacesRecords() {
 	                html += '<td class="race_name" id="' + item.race_name + '">' + item.race_name + '</td>';
                     html += '<td>' + item.race_type + '</td>';
 					html += '<td>' + item.race_notes + '</td>';
-					html += '<td class="add_res"><input type="button" value="הוסף תוצאות" id='+item.id+' n="'+encodeURIComponent(item.race_name)+'" d="'+item.race_date+'"></td>';
-					html += '<td class="show_res"><input type="button" value="הצג תוצאות" id='+item.id+' n="'+encodeURIComponent(item.race_name)+'" d="'+item.race_date+'"></td>';
+                        html += '<td class="add_res"><input class="race_action_button" type="button" value="הוסף תוצאות" id='+item.id+' n="'+encodeURIComponent(item.race_name)+'" d="'+item.race_date+'"></td>';
+                        html += '<td class="show_res"><input class="race_action_button" type="button" value="הצג תוצאות" id='+item.id+' n="'+encodeURIComponent(item.race_name)+'" d="'+item.race_date+'"></td>';
 	                html += '</tr>';
 	            });
 				
 	            $('#records').html(html);
-                $('#races_table tr').each(function(){
+                $('#races_table tbody tr').each(function(){
                     $(this).mouseenter(function(){$(this).addClass('hover');});
                     $(this).mouseleave(function(){$(this).removeClass('hover');});
                     $(this).click(function(){
@@ -119,7 +120,6 @@ function openRaceDialog(raceName, raceDate, raceType, raceTypeId, raceNotes, rac
 	$('#descriptionContainer').empty().append('<textarea id="description" maxlength="255"></textarea>');
 	$('#description').val(raceNotes);
     $('#race_id').val(raceId);
-    $('#create_race_dialog').css('background-color', '#feffe5');
     $("#create_race_dialog").dialog({ title: dialogTitle });
     $("#create_race_dialog").dialog("open");
 }
@@ -135,7 +135,6 @@ function openResultsDialog(raceName,raceDate, raceId)
     $('#run_time').mask('9:59:59', {placeholder:"0"});
 	
 	$('#result_race_id').val(raceId);
-    $('#create_results_dialog').css('background-color', '#feffe5');
 	$('#create_results_dialog .label').css({
 		'width': '185px',
 		'font-weight': 'bold'
@@ -160,13 +159,12 @@ function openRaceResultsDialog(raceId,raceName,raceDate )
 	dialogTitle = dialogTitle.concat(' - ');
 	dialogTitle = dialogTitle.concat(raceDate);
 	
-    $('#race_results_dialog').css('background-color', '#feffe5');
 	$('#race_results_dialog').dialog({
 		height: 300,
 		width: 300,
 		modal: true,
 		resizable: true,
-		dialogClass: 'no-close success-dialog',
+        dialogClass: 'modernDialog no-close success-dialog',
 		
 		buttons: {
 					סגור: function() { //ok
@@ -326,6 +324,7 @@ $(document).ready(function() {
             direction : 'rtl'
         },
         autoOpen: false,
+        dialogClass: 'modernDialog',
         buttons : {
             "אשר" : function() {
                 var race = getRace();
@@ -397,6 +396,7 @@ $(document).ready(function() {
             direction : 'rtl'
         },
         autoOpen: false,
+        dialogClass: 'modernDialog',
         buttons : {
             "אשר" : function() {
                 var result = getResult();
@@ -461,7 +461,7 @@ $(document).ready(function() {
 }
 #create_race_dialog select {
     width: 158px;
-	
+}
 #create_race_dialog #description
 {
     width: 233px;
@@ -470,6 +470,108 @@ $(document).ready(function() {
     max-height: 86px;
 }	
 
+.races_add_button,
+.race_action_button {
+    min-height: 38px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #1f6f78 !important;
+    border-radius: 999px !important;
+    background: #1f6f78 !important;
+    color: #ffffff !important;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.races_add_button:hover,
+.race_action_button:hover {
+    background: #174f55 !important;
+}
+
+@media screen and (max-width: 767px) {
+    .races_page {
+        width: auto !important;
+        margin: 0 14px !important;
+    }
+
+    .races_page .page_header {
+        display: block;
+        margin: 18px 0 12px;
+        color: #263238;
+        font-size: 22px;
+    }
+
+    #data {
+        margin-top: 18px !important;
+        overflow-x: auto;
+        direction: ltr;
+    }
+
+    #races_table {
+        width: 100%;
+        min-width: 720px;
+        table-layout: fixed;
+        direction: rtl;
+    }
+
+    #races_table th,
+    #races_table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    #races_table th:nth-child(1),
+    #races_table td:nth-child(1) {
+        width: 90px;
+    }
+
+    #races_table th:nth-child(5),
+    #races_table td:nth-child(5) {
+        width: 110px;
+    }
+
+    #races_table th:nth-child(6),
+    #races_table td:nth-child(6) {
+        width: 110px;
+    }
+
+    #create_race_dialog,
+    #create_results_dialog {
+        box-sizing: border-box;
+        padding: 14px !important;
+    }
+
+    #create_race_dialog .label,
+    #create_results_dialog .label {
+        display: block;
+        width: auto !important;
+        margin-bottom: 5px;
+        font-size: 12px;
+    }
+
+    #create_race_dialog input:not([type="hidden"]),
+    #create_race_dialog select,
+    #create_race_dialog textarea,
+    #create_results_dialog input:not([type="hidden"]),
+    #create_results_dialog select {
+        width: 100% !important;
+        min-height: 38px;
+        box-sizing: border-box;
+        font-size: 15px;
+    }
+
+    #create_race_dialog textarea {
+        min-height: 70px;
+    }
+
+    .ui-dialog {
+        max-width: 92vw !important;
+    }
+}
+
 
 </style>
 </head>
@@ -477,7 +579,7 @@ $(document).ready(function() {
 <body>
     <?php require 'widgets/header.php'; ?>
 
-    <div class="RunLog" class="ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
+    <div class="RunLog ui-widget races_page" style="width:920px; margin-left:auto; margin-right:auto;">
         <div id="create_race_dialog">
             <form>
                 <div style="margin-top:15px;">
@@ -545,7 +647,7 @@ $(document).ready(function() {
 
 
         <h2 class="page_header">מרוצים</h2>
-        <input type="button" onclick="openCreateRaceDialog()" value="הוסף מרוץ" style="margin-top:20px;">
+        <input class="races_add_button" type="button" onclick="openCreateRaceDialog()" value="הוסף מרוץ" style="margin-top:20px;">
         <div id="data" style="margin-top:20px;">
             <table id="races_table" class="tablesorter">
                 <thead>
@@ -553,7 +655,8 @@ $(document).ready(function() {
                     <th>מרוץ</th>
                     <th>סוג</th>
                     <th>הערות</th>
-					<th>תוצאות</th>
+                    <th>הוספת תוצאות</th>
+                    <th>הצגת תוצאות</th>
                 </thead>
                 <tbody id="records"></tbody>
             </table>

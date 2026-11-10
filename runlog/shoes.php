@@ -5,6 +5,7 @@ require_once 'php/html_page_init.php';
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <html dir="RTL">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>רצי הבירה - הנעליים שלי</title>
 <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
@@ -94,7 +95,6 @@ function openShoeDialog(shoeName, shoeStartUsingDate, shoeType, shoeId)
     $('#datepicker').val(shoeStartUsingDate);
     $('#type').val(shoeType);
     $('#shoe_id').val(shoeId);
-    $('#create_shoe_dialog').css('background-color', '#feffe5');
     $("#create_shoe_dialog").dialog({ title: dialogTitle });
     $("#create_shoe_dialog").dialog("open");
 }
@@ -145,6 +145,7 @@ $(document).ready(function() {
             direction : 'rtl'
         },
         autoOpen: false,
+        dialogClass: 'modernDialog',
         buttons : {
             "אשר" : function() {
                 var shoe = getShoe();
@@ -209,13 +210,85 @@ $(document).ready(function() {
 #create_shoe_dialog select {
     width: 158px;
 }
+
+@media screen and (max-width: 767px) {
+    .shoes_page {
+        width: auto !important;
+        margin: 0 14px !important;
+    }
+
+    .shoes_page .page_header {
+        display: block;
+        margin: 18px 0 12px;
+        color: #263238;
+        font-size: 22px;
+    }
+
+    .shoes_add_button {
+        min-height: 40px;
+        padding: 0 16px;
+        border: 1px solid #1f6f78;
+        border-radius: 999px !important;
+        background: #1f6f78;
+        color: #ffffff;
+        font: inherit;
+        font-weight: bold;
+    }
+
+    #data {
+        margin-top: 18px !important;
+        overflow-x: auto;
+        direction: ltr;
+    }
+
+    #user_shoes_table {
+        width: 100%;
+        min-width: 520px;
+        table-layout: fixed;
+        direction: rtl;
+    }
+
+    #user_shoes_table th,
+    #user_shoes_table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    #user_shoes_table th:first-child,
+    #user_shoes_table td:first-child {
+        width: 56px;
+        text-align: center;
+    }
+
+    #create_shoe_dialog {
+        box-sizing: border-box;
+        padding: 14px !important;
+    }
+
+    #create_shoe_dialog .label {
+        display: block;
+        width: auto;
+        margin-bottom: 5px;
+        font-size: 12px;
+    }
+
+    #create_shoe_dialog input:not([type="hidden"], [type="button"]),
+    #create_shoe_dialog select {
+        width: 100%;
+        min-height: 38px;
+        box-sizing: border-box;
+        font-size: 15px;
+    }
+}
 </style>
 </head>
 
 <body>
     <?php require 'widgets/header.php'; ?>
 
-    <div class="RunLog" class="ui-widget" style="width:920px; margin-left:auto; margin-right:auto;">
+    <div class="RunLog ui-widget shoes_page" style="width:920px; margin-left:auto; margin-right:auto;">
         <div id="create_shoe_dialog">
             <form>
                 <div style="margin-top:15px;">
@@ -243,7 +316,7 @@ $(document).ready(function() {
         </div>
 
         <h2 class="page_header">הנעליים שלי</h2>
-        <input type="button" onclick="openCreateShoeDialog()" value="הוסף נעל" style="margin-top:20px;">
+        <input class="shoes_add_button" type="button" onclick="openCreateShoeDialog()" value="הוסף נעל" style="margin-top:20px;">
         <div id="data" style="margin-top:20px;">
             <table id="user_shoes_table" class="tablesorter">
                 <thead>
