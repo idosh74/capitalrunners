@@ -1005,11 +1005,15 @@ table.tablesorter .active_col {
 
     .mobileWorkoutDialog {
         position: fixed !important;
-        top: 50% !important;
+        top: 8px !important;
         left: 50% !important;
         right: auto !important;
-        transform: translate(-50%, -50%) !important;
+        transform: translateX(-50%) !important;
+        display: flex !important;
+        flex-direction: column;
         width: calc(100% - 16px) !important;
+        height: calc(100vh - 16px) !important;
+        height: calc(100svh - 16px) !important;
         box-sizing: border-box !important;
         max-width: none !important;
         margin: 0 !important;
@@ -1019,6 +1023,7 @@ table.tablesorter .active_col {
     }
 
     .mobileWorkoutDialog .ui-dialog-titlebar {
+        flex: 0 0 auto;
         padding: 12px 14px;
         border: 0;
         background: #263238;
@@ -1038,13 +1043,18 @@ table.tablesorter .active_col {
     }
 
     .mobileWorkoutDialog .ui-dialog-content {
-        height: calc(100vh - 142px) !important;
+        flex: 1 1 auto;
+        min-height: 0 !important;
+        height: auto !important;
         max-height: none !important;
         padding: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
         background: #f7f9f9;
     }
 
     .mobileWorkoutDialog .ui-dialog-buttonpane {
+        flex: 0 0 auto;
         margin: 0;
         padding: 10px 12px;
         border-top: 1px solid #dfe4e6;
