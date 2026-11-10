@@ -622,7 +622,8 @@ var Calendar = {
 		if (run_time != "00:00")
         {
     		html += "<div style=\"font-weight:bold;\">";
-    		html += "<div><span> שעה: <span>"+run_time+"</span></div>";
+            html += "<div><span> שעה: <span>"+run_time+"</span></span></div>";
+            html += "</div>";
 		}
 
         html += "<div style=\"font-weight:normal;\">";
@@ -631,6 +632,7 @@ var Calendar = {
             html += "<div><span>"+notes+"</span></div>";
         }
 
+        html += "</div>";
         return html;
     }
 }
