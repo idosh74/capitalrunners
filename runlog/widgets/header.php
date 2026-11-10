@@ -112,7 +112,7 @@
       }
 	</script>
 	
-<div id="header">
+<div id="header" class="dashboard_metrics">
 	<div >
 		<table dir="rtl" align="center" border="0">
 			  <tr >
@@ -190,6 +190,25 @@
         </div> 
     </div>
 </div>
+<?php if (!empty($runner_id)) { ?>
+<section class="mobile_metrics" aria-label="סיכום קילומטרז׳">
+    <div class="mobile_metric">
+        <span class="mobile_metric_label">היום</span>
+        <strong><?php echo number_format((float)$row_d['daily'], 1); ?></strong>
+        <span class="mobile_metric_unit">ק״מ</span>
+    </div>
+    <div class="mobile_metric mobile_metric_primary">
+        <span class="mobile_metric_label">השבוע שלי</span>
+        <strong><?php echo number_format((float)$row_r_w['runner_weekly'], 1); ?></strong>
+        <span class="mobile_metric_unit">ק״מ</span>
+    </div>
+    <div class="mobile_metric">
+        <span class="mobile_metric_label">השבוע בקבוצה</span>
+        <strong><?php echo number_format((float)$row_w['weekly'], 1); ?></strong>
+        <span class="mobile_metric_unit">ק״מ</span>
+    </div>
+</section>
+<?php } ?>
 <script>
 $(document).ready(function () {
 	var counter = '<?php echo $counter; ?>';

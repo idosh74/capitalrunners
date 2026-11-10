@@ -9,6 +9,48 @@ $.ajaxSetup({
     }
 });
 
+var TextLimit = {
+    NOTES_MAX:20000,
+    COMMENT_MAX:2000,
+
+    // shows a live warning under the textarea when the text exceeds the limit
+    attach:function ($textarea, max) {
+        $textarea.data('textLimit', max);
+        var $warning = $('<div class="text_limit_warning" style="display:none;color:#c62828;font-size:12px;margin-top:2px;"></div>');
+        $textarea.after($warning);
+        $textarea.on('input keyup paste change', function () {
+            setTimeout(function () {
+                var length = $textarea.val().length;
+                if (length > max) {
+                    $warning.text('הטקסט ארוך מדי (' + length + ' מתוך ' + max + ' תווים). יש לקצר לפני השמירה.').show();
+                } else {
+                    $warning.hide();
+                }
+            }, 0);
+        });
+    },
+
+    exceeds:function (text, max) {
+        return text != null && text.length > max;
+    },
+
+    alertTooLong:function (text, max) {
+        alert('הטקסט ארוך מדי (' + text.length + ' תווים, המקסימום הוא ' + max + '). יש לקצר את הטקסט. הנתונים לא נשמרו.');
+    }
+};
+
+var SaveHelper = {
+    failMessage:function (prefix, xhr) {
+        var reason = 'שגיאת תקשורת עם השרת';
+        if (xhr && (xhr.status == 413 || xhr.status == 414)) {
+            reason = 'הטקסט ארוך מדי';
+        } else if (xhr && xhr.status) {
+            reason = 'שגיאת שרת (' + xhr.status + ')';
+        }
+        return prefix + ': ' + reason + '. הנתונים לא נשמרו.';
+    }
+};
+
 var Calendar = {
 
     // initialize the calendar
@@ -33,6 +75,202 @@ var Calendar = {
         });
 
         EventDialog.init();
+        Calendar.initMobileAgenda();
+    },
+
+    initMobileAgenda:function () {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches) {
+            return;
+        }
+
+        var today = new Date();
+        $('#mobileAgendaDatePicker').val(Calendar.mobileDateValue(today));
+
+        $('#mobileAgendaAdd').click(function () {
+            var selectedDate = $('#mobileAgendaDatePicker').val();
+            var date = selectedDate ? Calendar.mobileDateToDate(selectedDate) : today;
+            Calendar.handleClickDay(date, true, null, null);
+        });
+
+        Calendar.mobileMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        $('#mobileAgendaPrev').click(function () {
+            Calendar.shiftMobileMonth(-1);
+        });
+        $('#mobileAgendaNext').click(function () {
+            Calendar.shiftMobileMonth(1);
+        });
+        $('#mobileAgendaMonth').change(function () {
+            var parts = $(this).val().split('-');
+            if (parts.length != 2) {
+                return;
+            }
+            Calendar.mobileMonth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+            Calendar.refreshMobileAgenda();
+        });
+
+        Calendar.refreshMobileAgenda();
+    },
+
+    shiftMobileMonth:function (delta) {
+        var month = Calendar.mobileMonth;
+        Calendar.mobileMonth = new Date(month.getFullYear(), month.getMonth() + delta, 1);
+        Calendar.refreshMobileAgenda();
+    },
+
+    refreshMobileAgenda:function () {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 767px)').matches || !Calendar.mobileMonth) {
+            return;
+        }
+
+        var start = new Date(Calendar.mobileMonth.getTime());
+        var end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+        var monthValue = start.getFullYear() + '-' + (start.getMonth() < 9 ? '0' : '') + (start.getMonth() + 1);
+        $('#mobileAgendaMonth').val(monthValue);
+
+        Calendar.fetchMobileEvents(start, end);
+    },
+
+    fetchMobileEvents:function (start, end) {
+        if (!Calendar.hasValidDateRange(start, end)) {
+            $('#mobileAgendaList').html('<p class="mobileAgendaState">טעינת האימונים נכשלה</p>');
+            return;
+        }
+
+        var memberIdForAgenda = $('#users').val();
+        if (!memberIdForAgenda) {
+            $('#mobileAgendaList').html('<p class="mobileAgendaState">טוען את האימונים...</p>');
+            return;
+        }
+
+        $('#mobileAgendaList').html('<p class="mobileAgendaState">טוען את האימונים...</p>');
+        $.ajax({
+            url:'php/get_events.php',
+            dataType:'text',
+            data:{
+                start:Math.round(start.getTime() / 1000),
+                end:Math.round(end.getTime() / 1000),
+                member_id:memberIdForAgenda
+            },
+            success:function (txt) {
+                var doc = Utils.parseJSON(txt);
+                if (doc.status.ecode == STATUS_ERR) {
+                    $('#mobileAgendaList').html('<p class="mobileAgendaState">טעינת האימונים נכשלה</p>');
+                    return;
+                }
+                Calendar.renderMobileAgenda(doc.data || []);
+            },
+            error:function () {
+                $('#mobileAgendaList').html('<p class="mobileAgendaState">טעינת האימונים נכשלה</p>');
+            }
+        });
+    },
+
+    renderMobileAgenda:function (events) {
+        var agenda = $('#mobileAgendaList');
+        agenda.empty();
+
+        if (!events.length) {
+            agenda.html('<p class="mobileAgendaEmpty">אין אימונים להצגה</p>');
+            return;
+        }
+
+        events = events.slice().sort(function (a, b) {
+            var aStart = String(a.start || ''), bStart = String(b.start || '');
+            return aStart < bStart ? 1 : (aStart > bStart ? -1 : (b.id - a.id));
+        });
+
+        var currentDate = '';
+        var renderedEvents = 0;
+        $.each(events, function (index, item) {
+            if (!item.start) {
+                return;
+            }
+            var eventDate = new Date(item.start.replace(' ', 'T'));
+            if (isNaN(eventDate.getTime())) {
+                return;
+            }
+            var dateKey = eventDate.getFullYear() + '-' + eventDate.getMonth() + '-' + eventDate.getDate();
+            if (dateKey != currentDate) {
+                currentDate = dateKey;
+                var dateHeader = $('<div class="mobileAgendaDate"></div>');
+                dateHeader.append($('<h3></h3>').text(Calendar.formatMobileDate(eventDate)));
+                var addButton = $('<button type="button" class="mobileAgendaDateAdd">הוספה</button>');
+                addButton.click(function () {
+                    Calendar.handleClickDay(eventDate, true, null, null);
+                });
+                dateHeader.append(addButton);
+                agenda.append(dateHeader);
+            }
+
+            var mobileEvent = {
+                event_id:item.id,
+                title:item.type,
+                start:item.start,
+                member_id:$('#users').val(),
+                color:'#ffffff',
+                borderColor:'#1f6f78'
+            };
+            if (EVENT_TYPES_ATTRIBUTES[item.run_type_id]) {
+                mobileEvent.color = Calendar.getEventColor(item.run_type_id);
+                mobileEvent.borderColor = Calendar.getEventBorderColor(item.run_type_id);
+            }
+            var mobileSummary = Calendar.getMobileEventSummary(item);
+            var eventButton = $('<button type="button" class="mobileAgendaEvent"></button>');
+            eventButton.css({'background-color': mobileEvent.color, 'border-right-color': mobileEvent.borderColor});
+            eventButton.append($('<span class="mobileAgendaEventTitle"></span>').text(mobileSummary.title));
+            if (mobileSummary.meta) {
+                eventButton.append($('<span class="mobileAgendaEventMeta"></span>').text(mobileSummary.meta));
+            }
+            if (mobileSummary.notes) {
+                eventButton.append($('<span class="mobileAgendaEventNotes"></span>').text(mobileSummary.notes));
+            }
+            eventButton.click(function () {
+                Calendar.handleClickEvent(mobileEvent, null, null);
+            });
+            agenda.append(eventButton);
+            renderedEvents++;
+        });
+
+        if (!renderedEvents) {
+            agenda.html('<p class="mobileAgendaEmpty">אין אימונים להצגה</p>');
+        }
+    },
+
+    formatMobileDate:function (date) {
+        var days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        return days[date.getDay()] + ', ' + day + '/' + month;
+    },
+
+    mobileDateToDate:function (value) {
+        var parts = value.split('-');
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    },
+
+    mobileDateValue:function (date) {
+        var month = date.getMonth() + 1;
+        var day = date.getDate();
+        return date.getFullYear() + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
+    },
+
+    getMobileEventSummary:function (event) {
+        var distance = EventFormatter.getTotalDistance(event.warmup_distance, event.run_distance, event.cooldown_distance, event.run_type_id);
+        var distanceAndPace = EventFormatter.getRunDistanceAndPace(event.warmup_distance, event.run_distance, event.cooldown_distance, event.run_time, event.run_type_id);
+        var metaParts = [];
+
+        if (distance != null) {
+            metaParts.push(distance);
+        }
+        if (distanceAndPace != null && distanceAndPace !== '') {
+            metaParts.push(distanceAndPace);
+        }
+
+        return {
+            title:event.type,
+            meta:metaParts.join(' '),
+            notes:event.notes || ''
+        };
     },
 
     init2:function () {
@@ -51,8 +289,19 @@ var Calendar = {
         });
     },
 
+    hasValidDateRange:function (start, end) {
+        return !!start && !!end && start instanceof Date && end instanceof Date && !isNaN(start.getTime()) && !isNaN(end.getTime());
+    },
+
     // Fetch events from the server
     fetchEvents:function (start, end, callback) {
+        if (!Calendar.hasValidDateRange(start, end)) {
+            if (callback) {
+                callback([]);
+            }
+            return;
+        }
+
         var the_member_id = $("#users").val();
         $.ajax({
             url:'php/get_events.php',
@@ -86,6 +335,13 @@ var Calendar = {
 
     // Fetch events from the server
     fetchEvents2:function (start, end, callback) {
+        if (!Calendar.hasValidDateRange(start, end)) {
+            if (callback) {
+                callback([]);
+            }
+            return;
+        }
+
         $.ajax({
             url:'php/get_team_events.php',
             dataType:'text',
@@ -127,6 +383,7 @@ var Calendar = {
         $('#create_update_event_dialog').dialog({
             height:550,
             width:500,
+            dialogClass:'mobileWorkoutDialog',
             show:{
                 effect:'drop',
                 direction:'rtl'
@@ -136,10 +393,12 @@ var Calendar = {
                     var event_fields_data = EventDialog.getData();
                     if (event_fields_data != null) {
                         // passed validation
+                        var $eventDialog = $(this);
                         event_fields_data = Calendar.appendIdentityFields(event_fields_data, calEvent);
                         var event_fields_str = JSON.stringify(event_fields_data);
                         $.ajax({
                             url:'php/update_event.php',
+                            type:'POST',
                             dataType:'text',
                             data:{
                                 event_fields:event_fields_str
@@ -150,12 +409,15 @@ var Calendar = {
                                     alert("Update failed: "
                                         + doc.status.emessage);
                                 } else {
-                                    $('#calendar').fullCalendar('render');
-
+                                    $eventDialog.dialog("close");
+                                    $('#calendar').fullCalendar('refetchEvents');
+                                    Calendar.refreshMobileAgenda();
                                 }
+                            },
+                            error:function (xhr) {
+                                alert(SaveHelper.failMessage('העדכון נכשל', xhr));
                             }
                         });
-                        $(this).dialog("close");
                     }
                 },
                 "מחק":function () {
@@ -175,8 +437,8 @@ var Calendar = {
                                             alert("Deletion failed: "
                                                 + doc.emessage);
                                         } else {
-                                            $('#calendar').fullCalendar(
-                                                'render');
+                                            $('#calendar').fullCalendar('refetchEvents');
+                                            Calendar.refreshMobileAgenda();
                                         }
                                     }
                                 });
@@ -198,7 +460,7 @@ var Calendar = {
         });
         $('#create_update_event_dialog').css('background-color', '#feffe5');
         EventDialog.setData(calEvent);
-        $("#create_update_event_dialog").dialog("open");
+        $("#create_update_event_dialog").dialog("open").parent('.ui-dialog').addClass('mobileWorkoutDialog');
     },
 
     // Handle clicking on the calendar cell (not on the event)
@@ -216,6 +478,7 @@ var Calendar = {
             {
                 height:550,
                 width:500,
+                dialogClass:'mobileWorkoutDialog',
                 show:{
                     effect:'drop',
                     direction:'rtl'
@@ -226,10 +489,12 @@ var Calendar = {
                         var event_fields_data = EventDialog.getData();
                         if (event_fields_data != null) {
                             // passed validation
+                            var $eventDialog = $(this);
                             event_fields_data.date = the_date;
                             var event_fields_str = JSON.stringify(event_fields_data);
                             $.ajax({
                                 url:'php/create_event.php',
+                                type:'POST',
                                 dataType:'text',
                                 data:{
                                     event_fields:event_fields_str
@@ -240,12 +505,15 @@ var Calendar = {
                                         alert("Create failed: "
                                             + doc.status.emessage);
                                     } else {
-                                        $('#calendar').fullCalendar('render');
-
+                                        $eventDialog.dialog("close");
+                                        $('#calendar').fullCalendar('refetchEvents');
+                                        Calendar.refreshMobileAgenda();
                                     }
+                                },
+                                error:function (xhr) {
+                                    alert(SaveHelper.failMessage('היצירה נכשלה', xhr));
                                 }
                             });
-                            $(this).dialog("close");
                         }
                     },
                     "סגור":function () {
@@ -254,7 +522,7 @@ var Calendar = {
                 }
             });
         $('#create_update_event_dialog').css('background-color', '#feffe5');
-        $("#create_update_event_dialog").dialog("open");
+        $("#create_update_event_dialog").dialog("open").parent('.ui-dialog').addClass('mobileWorkoutDialog');
     },
 
     appendIdentityFields:function (eventFields, calEvent) {
@@ -827,6 +1095,10 @@ var Comments = {
             commentCssClass += ' new_comment';
         }
 
+        if (comment.is_coach == 1) {
+            commentCssClass += ' coach_comment';
+        }
+
         if (comment.commenter_name == gMemberName) {
             commentCssClass += ' my_comment';
         }
@@ -881,6 +1153,7 @@ var Comments = {
                             event_id: eventId,
                             comment_id: doc.data.comment_id,
                             commenter_name: gMemberName,
+                            is_coach: (typeof gIsCoach !== 'undefined' && gIsCoach) ? 1 : 0,
                             comment: comment
                         });
                         $commentTextarea.val('');

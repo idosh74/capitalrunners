@@ -34,7 +34,7 @@ function getDayEventsAsJSON($conn,$date,$untilDate,$runnerId) {
 
     $sql =
 
-"SELECT events.id AS event_id, comments.id AS comment_id, comments.runner_id, runners.member_name as 'commenter_name', COALESCE(comments.comment, '') AS comment
+"SELECT events.id AS event_id, comments.id AS comment_id, comments.runner_id, runners.member_name as 'commenter_name', runners.m_is_coach AS is_coach, COALESCE(comments.comment, '') AS comment
      FROM tl_events AS events
      JOIN tl_comments AS comments ON events.id = comments.event_id
      JOIN tl_runners AS runners ON comments.runner_id = runners.id

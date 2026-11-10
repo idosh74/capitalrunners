@@ -5,6 +5,7 @@ require_once 'php/html_page_init.php';
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <html dir="RTL">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>רצי הבירה - יומן ריצה</title>
     <link rel="stylesheet" type="text/css" href="https://yui-s.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
@@ -65,11 +66,30 @@ require_once 'php/html_page_init.php';
     <input id="users1"/>
 </div>
 
-<div style="text-align:center;">
+<div class="mobileRunnerSelector" style="text-align:center;">
     <select id="users" style="" onchange="Functions.userChanged();"></select>
 </div>
 
 <div id='calendar'></div>
+<section id="mobileAgenda" aria-live="polite">
+    <div class="mobileAgendaHeader">
+        <div>
+            <p class="mobileAgendaEyebrow">יומן אימונים</p>
+            <h2>האימונים שלי</h2>
+        </div>
+        <div class="mobileAgendaActions">
+            <label for="mobileAgendaDatePicker">תאריך</label>
+            <input type="date" id="mobileAgendaDatePicker">
+            <button type="button" id="mobileAgendaAdd">הוספה</button>
+        </div>
+    </div>
+    <div class="mobileAgendaMonthNav">
+        <button type="button" id="mobileAgendaPrev">&rsaquo; הקודם</button>
+        <input type="month" id="mobileAgendaMonth" aria-label="חודש">
+        <button type="button" id="mobileAgendaNext">הבא &lsaquo;</button>
+    </div>
+    <div id="mobileAgendaList"></div>
+</section>
 <div id="delete_dialog" title="מחיקת אימון">האם למחוק את האימון ?</div>
 
 <!-- ~~~~~~~~~~~~~~~~~~~ -->
@@ -218,7 +238,7 @@ require_once 'php/html_page_init.php';
         </div>
 
         <!-- Notes -->
-        <div style="margin-top:20px;">
+        <div class="mobileWorkoutNotes" style="margin-top:20px;">
             <div class="label">פרטים</div>
             <div id="notesContainer" style="float:right;"></div>
         </div>
