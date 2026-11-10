@@ -53,10 +53,10 @@ function getEventFields() {
     //
     // Make sure we have the input and it is a valid JSON
     //
-    if (!isset ($_GET['event_fields'])) {
+    $eventFieldsStr = isset($_POST['event_fields']) ? $_POST['event_fields'] : (isset($_GET['event_fields']) ? $_GET['event_fields'] : null);
+    if ($eventFieldsStr === null) {
         die(getErrorStatusWithDummyData("Mandatory input - event_fields was not found."));
     }
-    $eventFieldsStr = $_GET['event_fields'];
     $eventFields = json_decode($eventFieldsStr);
     $json_decode_error = json_last_error();
     if ($json_decode_error != JSON_ERROR_NONE) {
