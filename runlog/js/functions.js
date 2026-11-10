@@ -721,11 +721,7 @@ var EventDialog = {
         $('#shoeSelect').change(this.shoeChanged);
         $('#extraShoeSelect').change(this.extraShoeChanged);
 
-        // input masking for distance, duration fields
-        $.mask.definitions['5'] = "[0-5]";
-        $('#run_distance').mask('99.9', {placeholder:"0"});
-        $('#run_time').mask('9:59:59', {placeholder:"0"});
-        $('#extra_run_distance').mask('99.9', {placeholder:"0"});
+        EventDialog.initNumericInputs();
 
         // handler for distance, duration change event in order to update pace
         $('#main_run input[type="text"]').blur(this.calculatePace);
@@ -733,6 +729,56 @@ var EventDialog = {
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
  		$('#weight').mask('99.9', {placeholder:"0"});    
+    },
+
+    initNumericInputs:function () {
+        var $distance = $('#run_distance, #extra_run_distance');
+        var $time = $('#run_time');
+        var $inputs = $distance.add($time);
+        var mobileQuery = window.matchMedia ? window.matchMedia('(max-width: 767px)') : null;
+
+        function configureInputs() {
+            $inputs.unmask().off('.mobileNumeric');
+            if (mobileQuery && mobileQuery.matches) {
+                $inputs.on('focus.mobileNumeric', function () {
+                    this.select();
+                }).on('input.mobileNumeric', function () {
+                    var digitsAfterCursor = this.value.slice(this.selectionStart).replace(/\D/g, '').length;
+                    var isTime = this.id === 'run_time';
+                    var digits = this.value.replace(/\D/g, '').replace(/^0+/, '');
+                    var length = isTime ? 5 : 2;
+                    while (digits.length < length) {
+                        digits = '0' + digits;
+                    }
+                    if (isTime) {
+                        this.value = digits.slice(0, -4) + ':' + digits.slice(-4, -2) + ':' + digits.slice(-2);
+                    } else {
+                        this.value = parseInt(digits.slice(0, -1), 10) + '.' + digits.slice(-1);
+                    }
+                    var cursor = this.value.length;
+                    while (cursor > 0 && digitsAfterCursor > 0) {
+                        cursor--;
+                        if (/\d/.test(this.value.charAt(cursor))) {
+                            digitsAfterCursor--;
+                        }
+                    }
+                    this.setSelectionRange(cursor, cursor);
+                });
+            } else {
+                $.mask.definitions['5'] = '[0-5]';
+                $distance.mask('99.9', {placeholder:'0'});
+                $time.mask('9:59:59', {placeholder:'0'});
+            }
+        }
+
+        configureInputs();
+        if (mobileQuery) {
+            if (mobileQuery.addEventListener) {
+                mobileQuery.addEventListener('change', configureInputs);
+            } else if (mobileQuery.addListener) {
+                mobileQuery.addListener(configureInputs);
+            }
+        }
     },
 
     // resets the event dialog to its default values

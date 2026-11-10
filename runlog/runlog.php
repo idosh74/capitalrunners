@@ -198,8 +198,8 @@ require_once 'php/html_page_init.php';
                         <th>קצב</th>
                     </tr>
                     <tr>
-                        <td><input type="text" id="run_distance"></td>
-                        <td><input type="text" id="run_time"></td>
+                        <td><input type="text" id="run_distance" inputmode="numeric" autocomplete="off"></td>
+                        <td><input type="text" id="run_time" inputmode="numeric" autocomplete="off"></td>
                         <td>
                             <div id="run_pace" class="pace"></div>
                         </td>
@@ -222,7 +222,7 @@ require_once 'php/html_page_init.php';
                         <th>תוספת מרחק (חימום ושחרור)</th>
                     </tr>
                     <tr>
-                        <td><input type="text" id="extra_run_distance"></td>
+                        <td><input type="text" id="extra_run_distance" inputmode="numeric" autocomplete="off"></td>
                     </tr>
                 </table>
 

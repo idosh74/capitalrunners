@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mobile workout input test</title>
+</head>
+<body>
+    <input id="run_time" value="0:00:00">
+    <input id="run_distance" value="00.0">
+    <input id="extra_run_distance" value="00.0">
+    <pre id="result"></pre>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/jquery.maskedinput.js"></script>
+    <script src="../js/functions.js"></script>
+    <script>
+        if (!window.matchMedia('(max-width: 767px)').matches) {
+            document.getElementById('result').textContent = 'Run this test at a viewport width of 767px or less.';
+            throw new Error('Mobile viewport required');
+        }
+        $(function () {
+            EventDialog.initNumericInputs();
+
+            function enterDigits(id, digits) {
+                var input = document.getElementById(id);
+                input.focus();
+                input.select();
+                for (var i = 0; i < digits.length; i++) {
+                    var start = input.selectionStart;
+                    var end = input.selectionEnd;
+                    input.value = input.value.slice(0, start) + digits[i] + input.value.slice(end);
+                    input.setSelectionRange(start + 1, start + 1);
+                    input.dispatchEvent(new Event('input', {bubbles:true}));
+                    if (document.activeElement !== input) throw new Error(id + ' lost focus');
+                }
+                return input.value;
+            }
+
+            if (enterDigits('run_time', '05414') !== '0:54:14' ||
+                Time.convertHMMSSToSeconds(document.getElementById('run_time').value) !== 3254 ||
+                enterDigits('run_distance', '124') !== '12.4' ||
+                enterDigits('extra_run_distance', '124') !== '12.4' ||
+                enterDigits('run_distance', '1234') !== '123.4' ||
+                enterDigits('run_time', '05999') !== '0:59:99' ||
+                Time.convertHMMSSToSeconds(document.getElementById('run_time').value) !== null) {
+                throw new Error('Mobile workout input formatting failed');
+            }
+            document.getElementById('result').textContent = 'Mobile workout input tests passed.';
+        });
+    </script>
+</body>
+</html>
