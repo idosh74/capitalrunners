@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mobile workout dialog test</title>
+    <link rel="stylesheet" href="../css/jquery-ui.css">
+    <link rel="stylesheet" href="../css/runlog.css">
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/jquery-ui.min.js"></script>
+    <script src="../js/constants.js"></script>
+    <script src="../js/functions.js"></script>
+</head>
+<body>
+    <select id="users"><option value="123">Runner</option></select>
+    <div id="calendar"></div>
+    <div id="create_update_event_dialog" title="Workout"><div style="height:1200px"></div></div>
+    <div id="delete_dialog" title="Delete">Confirm delete?</div>
+    <pre id="result"></pre>
+    <script>
+        var memberId = 123;
+        $(function () {
+            if (!window.matchMedia('(max-width: 767px)').matches) {
+                $('#result').text('Run this test at a viewport width of 767px or less.');
+                return;
+            }
+            $.fx.off = true;
+            EventDialog.reset = function () {};
+            EventDialog.setData = function () {};
+            EventDialog.getData = function () { return {}; };
+            $.fn.fullCalendar = function () { return this; };
+            Calendar.refreshMobileAgenda = function () {};
+            $.ajax = function (options) {
+                setTimeout(function () {
+                    options.success(JSON.stringify({status:{ecode:1}, data:[]}));
+                }, 0);
+            };
+
+            function check(condition, message) {
+                if (!condition) {
+                    $('#result').text('FAIL: ' + message);
+                    throw new Error(message);
+                }
+            }
+            function clickButton(dialog, label) {
+                dialog.parent().find('.ui-dialog-buttonpane button').filter(function () {
+                    return $(this).text() === label;
+                }).trigger('click');
+            }
+
+            var workout = $('#create_update_event_dialog');
+            Calendar.handleClickDay(new Date(2026, 10, 10), true, null, null);
+            check(workout.parent().is(':visible'), 'Create dialog did not open');
+            clickButton(workout, 'אשר');
+            setTimeout(function () {
+                check(!workout.parent().is(':visible'), 'Create dialog remained visible after save');
+                Calendar.handleClickEvent({event_id:1, member_id:123}, null, null);
+                clickButton(workout, 'מחק');
+                var confirmation = $('#delete_dialog');
+                check(confirmation.parent().hasClass('modernDialog'), 'Delete dialog is not styled');
+                check(confirmation.parent().is(':visible'), 'Delete confirmation did not open');
+                clickButton(confirmation, 'סגור');
+                check(!confirmation.parent().is(':visible'), 'Delete confirmation remained visible');
+                check(workout.parent().is(':visible'), 'Cancelling delete closed the workout');
+                clickButton(workout, 'אשר');
+                setTimeout(function () {
+                    check(!workout.parent().is(':visible'), 'Edit dialog remained visible after save');
+                    $('#result').text('Mobile workout dialog tests passed.');
+                }, 0);
+            }, 0);
+        });
+    </script>
+</body>
+</html>

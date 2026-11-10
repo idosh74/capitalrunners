@@ -371,6 +371,14 @@ var Calendar = {
         });
     },
 
+    openWorkoutDialog:function () {
+        $(this).parent('.ui-dialog').addClass('workoutDialogOpen');
+    },
+
+    closeWorkoutDialog:function () {
+        $(this).parent('.ui-dialog').removeClass('workoutDialogOpen');
+    },
+
     // handle clicking on 'event'
     handleClickEvent:function (calEvent, jsEvent, view) {
 
@@ -384,6 +392,8 @@ var Calendar = {
             height:550,
             width:500,
             dialogClass:'mobileWorkoutDialog',
+            open:Calendar.openWorkoutDialog,
+            close:Calendar.closeWorkoutDialog,
             show:{
                 effect:'drop',
                 direction:'rtl'
@@ -422,6 +432,7 @@ var Calendar = {
                 },
                 "מחק":function () {
                     $("#delete_dialog").dialog({
+                        dialogClass:'modernDialog',
                         buttons:{
                             "אשר":function () {
                                 $.ajax({
@@ -479,6 +490,8 @@ var Calendar = {
                 height:550,
                 width:500,
                 dialogClass:'mobileWorkoutDialog',
+                open:Calendar.openWorkoutDialog,
+                close:Calendar.closeWorkoutDialog,
                 show:{
                     effect:'drop',
                     direction:'rtl'
