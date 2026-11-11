@@ -27,5 +27,7 @@ define('MAX_EXTRA_DISTANCE', 99.9);
 define('MIN_RUN_TIME', 0);
 define('MAX_RUN_TIME', 35999);
 
-define('JS_VERSION', 50);
+define('MAX_TEXT_BYTES', 60000);
+
+define('JS_VERSION', 51);
 define('CSS_VERSION', 20);

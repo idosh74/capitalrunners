@@ -45,6 +45,10 @@ function validateEventFields($eventFields) {
         }
     }
 
+    if (isset($eventFields->notes) && is_string($eventFields->notes) && strlen($eventFields->notes) > MAX_TEXT_BYTES) {
+        return new ValidationResult(false, "הטקסט ארוך מדי");
+    }
+
     return new ValidationResult(true, "no problem");
 
 }

@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Text limit tests</title>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/jquery.elastic.js"></script>
+    <script src="../js/constants.js"></script>
+    <script src="../js/functions.js"></script>
+</head>
+<body>
+    <div id="notesContainer"></div>
+    <input id="run_distance" value="0">
+    <input id="extra_run_distance" value="0">
+    <input id="run_time" value="0:00:00">
+    <select id="run_types"><option value="1">Run</option></select>
+    <select id="rpe"><option value="1">Easy</option></select>
+    <select id="courseSelect"><option value="-1">None</option></select>
+    <select id="raceSelect"><option value="-1">None</option></select>
+    <select id="shoeSelect"><option value="-1">None</option></select>
+    <select id="extraShoeSelect"><option value="-1">None</option></select>
+    <div id="feed"></div>
+    <div class="content"><div id="comment_menu"></div></div>
+    <pre id="result">Running</pre>
+    <script>
+        var gMemberName = 'Runner';
+        var STATUS_ERR = 0;
+        var alerts = [];
+        var requests = [];
+        window.alert = function (message) {
+            alerts.push(message);
+            $('.event_edit_comment').trigger('blur');
+        };
+        $.ajax = function (options) { requests.push(options); };
+
+        function check(condition, message) {
+            if (!condition) throw new Error(message);
+        }
+
+        $(function () {
+            try {
+                EventDialog.reset();
+                var notes = $('#notes');
+                check(notes.length && notes.next('.text_limit_warning').length, 'Notes warning not attached on reset');
+                notes.val('a'.repeat(20000)).trigger('input');
+                check(EventDialog.getData().notes.length === 20000, 'Notes at the limit rejected');
+                notes.val('a'.repeat(20001)).trigger('input');
+                check(EventDialog.getData() === null, 'Oversized notes accepted');
+
+                Calendar.getEventColor = function () { return '#fff'; };
+                Calendar.getEventBorderColor = function () { return '#000'; };
+                Calendar.getFeedEventHtml = function () { return ''; };
+                Comments.appendEvent($('#feed'), {id: 1});
+                var input = $('#event_new_comment_1');
+                check(!input.attr('maxlength'), 'Comment input unexpectedly capped');
+                input.val('a'.repeat(2001)).trigger('input');
+                Comments.createComment(input);
+                check(requests.length === 0, 'Oversized new comment sent');
+                input.val('a'.repeat(2000)).trigger('input');
+                Comments.createComment(input);
+                check(requests.length === 1 && requests[0].type === 'POST', 'Comment at the limit not sent as POST');
+                requests[0].success(JSON.stringify({status:{ecode:1}, data:{comment_id:2}}));
+                check(input.val() === '', 'Saved comment not cleared');
+
+                var original = 'Original "quote" <tag>';
+                $('#event_comment_inner_2').text(original);
+                Comments.editComment(1, 2);
+                var edit = $('#event_edit_comment_1_2');
+                check(edit.val() === original, 'Original comment not preserved');
+                edit.val('b'.repeat(2001)).trigger('input');
+                Comments.updateComment(edit);
+                edit.trigger('blur');
+                check(requests.length === 1 && edit.is(document.getElementById('event_edit_comment_1_2')), 'Oversized edit sent or discarded');
+
+                setTimeout(function () {
+                    try {
+                        check(notes.next('.text_limit_warning').is(':visible'), 'Notes warning not visible');
+                        check(edit.next('.text_limit_warning').is(':visible'), 'Comment warning not visible');
+                        check(!input.next('.text_limit_warning').is(':visible'), 'Cleared comment warning still visible');
+                        notes.val('a'.repeat(20000)).trigger('input');
+                        edit.val('b'.repeat(2000)).trigger('input');
+                        Comments.updateComment(edit);
+                        check(requests.length === 2 && requests[1].type === 'POST', 'Comment edit at limit not sent as POST');
+                        Comments.updateComment(edit);
+                        check(requests.length === 2, 'Duplicate edit request sent');
+                        requests[1].error({status: 500});
+                        check(edit.is(document.getElementById('event_edit_comment_1_2')) && edit.val().length === 2000, 'Failed edit discarded');
+                        setTimeout(function () {
+                            try {
+                                check(!notes.next('.text_limit_warning').is(':visible'), 'Notes warning not cleared');
+                                check(!edit.next('.text_limit_warning').is(':visible'), 'Edit warning not cleared');
+                                check(alerts.length >= 3, 'Expected validation and error alerts');
+                                Comments.updateComment(edit);
+                                check(requests.length === 3, 'Failed edit could not be retried');
+                                requests[2].success(JSON.stringify({status:{ecode:1}, data:{}}));
+                                check(!document.getElementById('event_edit_comment_1_2'), 'Successful edit remained open');
+                                $('#result').text('Text limit browser tests passed.');
+                            } catch (error) {
+                                $('#result').text('FAIL: ' + (error.message || error));
+                            }
+                        }, 20);
+                    } catch (error) {
+                        $('#result').text('FAIL: ' + (error.message || error));
+                    }
+                }, 20);
+            } catch (error) {
+                $('#result').text('FAIL: ' + (error.message || error));
+            }
+        });
+    </script>
+</body>
+</html>

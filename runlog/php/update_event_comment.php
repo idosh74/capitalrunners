@@ -3,7 +3,7 @@
 require_once 'ajax_page_init.php';
 require_once 'comment_common.php';
 
-$eventCommentId = $_GET['event_comment_id'];
+$eventCommentId = isset($_POST['event_comment_id']) ? $_POST['event_comment_id'] : (isset($_GET['event_comment_id']) ? $_GET['event_comment_id'] : null);
 $validationResult = validatePositiveInt($eventCommentId);
 if(!$validationResult->isValid()) {
     die(getErrorStatus("Invalid event comment id: " .$validationResult->getMessage()));

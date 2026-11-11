@@ -816,6 +816,7 @@ var EventDialog = {
 
         $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
         $('#notes').val('').elastic();
+        TextLimit.attach($('#notes'), TextLimit.NOTES_MAX);
 		$('#pulse').val('0');
 		$('#max_pulse').val('0');
 		$('#elevation').val('0');
@@ -991,6 +992,10 @@ var EventDialog = {
         }
         eventFields.run_type_id = $('#run_types').val();
         eventFields.notes = $('#notes').val();
+        if (TextLimit.exceeds(eventFields.notes, TextLimit.NOTES_MAX)) {
+            TextLimit.alertTooLong(eventFields.notes, TextLimit.NOTES_MAX);
+            return null;
+        }
         eventFields.runner_id = $('#users').val();
 		eventFields.pulse = $('#pulse').val();
 		eventFields.max_pulse = $('#max_pulse').val();
@@ -1040,6 +1045,8 @@ var EventDialog = {
                     $('#extra_run_distance').val(Time.paddWithZero(fields.extra_distance));
                     $('#notesContainer').empty().append('<textarea id="notes"></textarea>');
                     $('#notes').val(fields.notes).elastic();
+                    TextLimit.attach($('#notes'), TextLimit.NOTES_MAX);
+                    $('#notes').trigger('input');
 					$('#pulse').val(fields.pulse);
 					$('#max_pulse').val(fields.max_pulse);
 					$('#elevation').val(fields.elevation);
@@ -1132,12 +1139,14 @@ var Comments = {
                 '   </div>' +
                 '   <div class="comments">' +
                 '       <div id="event_comments_' + event.id + '" class="list"></div>' +
-                '       <div><textarea id="event_new_comment_' + event.id + '" class="event_new_comment" placeholder="הוספת פרגון..." maxlength="2000"></textarea></div>' +
+                '       <div><textarea id="event_new_comment_' + event.id + '" class="event_new_comment" placeholder="הוספת פרגון..."></textarea></div>' +
                 '   </div>' +
                 '</div>';
 
         $container.append(eventHtml);
-        $('#event_new_comment_'+event.id).elastic().keypress(Comments.onNewCommentKeyPress);
+        var $commentInput = $('#event_new_comment_'+event.id);
+        $commentInput.elastic().keypress(Comments.onNewCommentKeyPress);
+        TextLimit.attach($commentInput, TextLimit.COMMENT_MAX);
     },
 
     appendComment: function (comment, lastFetchedTimestamp) {
@@ -1194,6 +1203,10 @@ var Comments = {
         var eventId = $commentTextarea.attr('id').replace('event_new_comment_', '');
         var comment = $commentTextarea.val();
 
+        if (TextLimit.exceeds(comment, TextLimit.COMMENT_MAX)) {
+            TextLimit.alertTooLong(comment, TextLimit.COMMENT_MAX);
+            return;
+        }
         if (comment) {
             var eventComment = {
                 event_id: eventId,
@@ -1201,6 +1214,7 @@ var Comments = {
             };
             $.ajax({
                 url: 'php/create_event_comment.php',
+                type: 'POST',
                 dataType: 'text',
                 data: {
                     event_comment: JSON.stringify(eventComment)
@@ -1218,8 +1232,11 @@ var Comments = {
                             is_coach: (typeof gIsCoach !== 'undefined' && gIsCoach) ? 1 : 0,
                             comment: comment
                         });
-                        $commentTextarea.val('');
+                        $commentTextarea.val('').trigger('input');
                     }
+                },
+                error: function (xhr) {
+                    alert(SaveHelper.failMessage('הוספת התגובה נכשלה', xhr));
                 }
             });
         }
@@ -1253,6 +1270,9 @@ var Comments = {
     },
 
     onEditCommentKeyDowm: function (e) {
+        if ($(e.target).data('saving')) {
+            return false;
+        }
         if (e.keyCode == 13 && !e.shiftKey) {
             Comments.updateComment($(e.target));
             return false;
@@ -1298,22 +1318,41 @@ var Comments = {
         var $comment = $eventComments.find('#event_comment_' + commentId);
         var commentText = $comment.find('#event_comment_inner_' + commentId).text();
 
-        var $editCommentTextarea = jQuery('<textarea id="event_edit_comment_' + eventId + '_' + commentId + '" class="event_edit_comment" maxlength="2000" data-original-comment="' + commentText + '">' + commentText + '</textarea>');
+        var $editCommentTextarea = $('<textarea class="event_edit_comment"></textarea>')
+            .attr('id', 'event_edit_comment_' + eventId + '_' + commentId)
+            .attr('data-original-comment', commentText)
+            .val(commentText);
         $comment.html($editCommentTextarea);
-        $editCommentTextarea.elastic().keydown(Comments.onEditCommentKeyDowm).blur(function(e){Comments.undoUpdateComment($(e.target));});
-        var commentLength = $editCommentTextarea.text().length;
+        $editCommentTextarea.elastic().keydown(Comments.onEditCommentKeyDowm).blur(function(e){
+            var $textarea = $(e.target);
+            if (!$textarea.data('saving') && !TextLimit.exceeds($textarea.val(), TextLimit.COMMENT_MAX)) {
+                Comments.undoUpdateComment($textarea);
+            }
+        });
+        TextLimit.attach($editCommentTextarea, TextLimit.COMMENT_MAX);
+        $editCommentTextarea.trigger('input');
+        var commentLength = $editCommentTextarea.val().length;
         $editCommentTextarea[0].setSelectionRange(commentLength, commentLength);
     },
 
     updateComment: function($commentTextarea) {
+        if ($commentTextarea.data('saving')) {
+            return;
+        }
         var eventAndCommentIds = $commentTextarea.attr('id').replace('event_edit_comment_', '').split('_');
         var eventId = eventAndCommentIds[0];
         var commentId = eventAndCommentIds[1];
         var comment = $commentTextarea.val();
 
+        if (TextLimit.exceeds(comment, TextLimit.COMMENT_MAX)) {
+            $commentTextarea.trigger('input');
+            return;
+        }
         if (comment) {
+            $commentTextarea.data('saving', true).prop('readonly', true);
             $.ajax({
                 url: 'php/update_event_comment.php',
+                type: 'POST',
                 dataType: 'text',
                 data: {
                     event_comment_id: commentId,
@@ -1323,10 +1362,15 @@ var Comments = {
                     var doc = Utils.parseJSON(txt);
                     if (doc.status.ecode == STATUS_ERR) {
                         alert("Update failed: " + doc.status.emessage);
+                        $commentTextarea.data('saving', false).prop('readonly', false);
                     }
                     else {
                         Comments.closeCommentEdit(eventId, commentId, comment);
                     }
+                },
+                error: function (xhr) {
+                    alert(SaveHelper.failMessage('עדכון התגובה נכשל', xhr));
+                    $commentTextarea.data('saving', false).prop('readonly', false);
                 }
             });
         } else {
