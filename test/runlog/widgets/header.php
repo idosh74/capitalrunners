@@ -60,11 +60,18 @@
 	  
       google.load('visualization', '1', {packages:['gauge']});
 	  google.charts.load("current", {packages:["corechart"]});
+      var dashboardMetrics = {
+          daily: <?php echo json_encode((float)$row_d['daily']); ?>,
+          weekly: <?php echo json_encode((float)$row_w['weekly']); ?>,
+          runnerWeekly: <?php echo json_encode((float)$row_r_w['runner_weekly']); ?>
+      };
+      var dashboardChartsReady = false;
       google.setOnLoadCallback(drawChart);
       function drawChart() {
-		var k_d = <?php echo $row_d['daily']; ?>;
-        var k_w = <?php echo $row_w['weekly']; ?>;
-		var k_r_w = <?php echo $row_r_w['runner_weekly']; ?>;
+        dashboardChartsReady = true;
+		var k_d = dashboardMetrics.daily;
+        var k_w = dashboardMetrics.weekly;
+		var k_r_w = dashboardMetrics.runnerWeekly;
         var data_d = google.visualization.arrayToDataTable([
           ['Label', 'Value'],
           ['TODAY', k_d]
@@ -110,6 +117,34 @@
 		chart.draw(data_r_w, options_r_w);
 		var chart = new google.visualization.Gauge(document.getElementById('chart_div_w'));
 		chart.draw(data_w, options_w);
+      }
+
+      function refreshDashboardMetrics() {
+          $.ajax({
+              url:'php/get_dashboard_metrics.php',
+              dataType:'text',
+              success:function (txt) {
+                  var doc = Utils.parseJSON(txt);
+                  if (doc.status.ecode == STATUS_ERR) {
+                      alert('רענון הקילומטראז׳ נכשל: ' + doc.status.emessage);
+                      return;
+                  }
+                  dashboardMetrics = {
+                      daily: Number(doc.data.daily),
+                      weekly: Number(doc.data.weekly),
+                      runnerWeekly: Number(doc.data.runner_weekly)
+                  };
+                  $('#dashboard_metric_daily').text(dashboardMetrics.daily.toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}));
+                  $('#dashboard_metric_runner_weekly').text(dashboardMetrics.runnerWeekly.toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}));
+                  $('#dashboard_metric_weekly').text(dashboardMetrics.weekly.toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}));
+                  if (dashboardChartsReady) {
+                      drawChart();
+                  }
+              },
+              error:function (xhr) {
+                  alert(SaveHelper.failMessage('רענון הקילומטראז׳ נכשל', xhr));
+              }
+          });
       }
 	</script>
 	
@@ -195,17 +230,17 @@
 <section class="mobile_metrics" aria-label="סיכום קילומטרז׳">
     <div class="mobile_metric">
         <span class="mobile_metric_label">היום</span>
-        <strong><?php echo number_format((float)$row_d['daily'], 1); ?></strong>
+        <strong id="dashboard_metric_daily"><?php echo number_format((float)$row_d['daily'], 1); ?></strong>
         <span class="mobile_metric_unit">ק״מ</span>
     </div>
     <div class="mobile_metric mobile_metric_primary">
         <span class="mobile_metric_label">השבוע שלי</span>
-        <strong><?php echo number_format((float)$row_r_w['runner_weekly'], 1); ?></strong>
+        <strong id="dashboard_metric_runner_weekly"><?php echo number_format((float)$row_r_w['runner_weekly'], 1); ?></strong>
         <span class="mobile_metric_unit">ק״מ</span>
     </div>
     <div class="mobile_metric">
         <span class="mobile_metric_label">השבוע בקבוצה</span>
-        <strong><?php echo number_format((float)$row_w['weekly'], 1); ?></strong>
+        <strong id="dashboard_metric_weekly"><?php echo number_format((float)$row_w['weekly'], 1); ?></strong>
         <span class="mobile_metric_unit">ק״מ</span>
     </div>
 </section>

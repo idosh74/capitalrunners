@@ -29,6 +29,8 @@
             EventDialog.getData = function () { return {}; };
             $.fn.fullCalendar = function () { return this; };
             Calendar.refreshMobileAgenda = function () {};
+            var dashboardRefreshCount = 0;
+            window.refreshDashboardMetrics = function () { dashboardRefreshCount++; };
             $.ajax = function (options) {
                 setTimeout(function () {
                     options.success(JSON.stringify({status:{ecode:1}, data:[]}));
@@ -53,6 +55,7 @@
             clickButton(workout, 'אשר');
             setTimeout(function () {
                 check(!workout.parent().is(':visible'), 'Create dialog remained visible after save');
+                check(dashboardRefreshCount === 1, 'Create did not refresh dashboard metrics');
                 Calendar.handleClickEvent({event_id:1, member_id:123}, null, null);
                 clickButton(workout, 'מחק');
                 var confirmation = $('#delete_dialog');
@@ -64,7 +67,14 @@
                 clickButton(workout, 'אשר');
                 setTimeout(function () {
                     check(!workout.parent().is(':visible'), 'Edit dialog remained visible after save');
-                    $('#result').text('Mobile workout dialog tests passed.');
+                    check(dashboardRefreshCount === 2, 'Edit did not refresh dashboard metrics');
+                    Calendar.handleClickEvent({event_id:1, member_id:123}, null, null);
+                    clickButton(workout, 'מחק');
+                    clickButton($('#delete_dialog'), 'אשר');
+                    setTimeout(function () {
+                        check(dashboardRefreshCount === 3, 'Delete did not refresh dashboard metrics');
+                        $('#result').text('Mobile workout dialog tests passed.');
+                    }, 0);
                 }, 0);
             }, 0);
         });

@@ -29,5 +29,5 @@ define('MAX_RUN_TIME', 35999);
 
 define('MAX_TEXT_BYTES', 60000);
 
-define('JS_VERSION', 51);
+define('JS_VERSION', 52);
 define('CSS_VERSION', 20);

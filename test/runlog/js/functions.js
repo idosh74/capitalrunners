@@ -412,6 +412,7 @@ var Calendar = {
                                     $eventDialog.dialog("close");
                                     $('#calendar').fullCalendar('refetchEvents');
                                     Calendar.refreshMobileAgenda();
+                                    refreshDashboardMetrics();
                                 }
                             },
                             error:function (xhr) {
@@ -435,11 +436,15 @@ var Calendar = {
                                         var doc = Utils.parseJSON(txt);
                                         if (doc.status.ecode == STATUS_ERR) {
                                             alert("Deletion failed: "
-                                                + doc.emessage);
+                                                + doc.status.emessage);
                                         } else {
                                             $('#calendar').fullCalendar('refetchEvents');
                                             Calendar.refreshMobileAgenda();
+                                            refreshDashboardMetrics();
                                         }
+                                    },
+                                    error:function (xhr) {
+                                        alert(SaveHelper.failMessage('מחיקת האימון נכשלה', xhr));
                                     }
                                 });
                                 $('#create_update_event_dialog').dialog('close');
@@ -508,6 +513,7 @@ var Calendar = {
                                         $eventDialog.dialog("close");
                                         $('#calendar').fullCalendar('refetchEvents');
                                         Calendar.refreshMobileAgenda();
+                                        refreshDashboardMetrics();
                                     }
                                 },
                                 error:function (xhr) {
