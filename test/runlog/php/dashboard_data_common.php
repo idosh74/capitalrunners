@@ -46,7 +46,7 @@ function getDashboardData($conn, $today) {
     $leaders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $sql = "SELECT e.id, r.member_name AS name, t.type, e.run_date, $distance AS distance,
-        e.run_distance, e.run_time
+        e.run_distance, e.run_time, COALESCE(e.notes, '') AS notes
         FROM tl_events e JOIN tl_runners r ON r.id = e.runner_id
         JOIN tl_run_types t ON t.id = e.run_type_id
         WHERE e.run_date >= :today AND e.run_date < :end AND $distance > 0

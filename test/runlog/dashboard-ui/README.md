@@ -25,7 +25,7 @@ active-runner total reflect the current database state, not historical status.
 The week starts on Sunday; the month starts on its first day. Leaderboards
 include active runners and rank the three highest distances for today,
 the current week or month. The activity panel shows up to ten of today's
-sessions. The graph and weekday insights use the selected period, and average
+sessions, including their workout descriptions when present. The graph and weekday insights use the selected period, and average
 pace is total exercise time divided by total exercise distance for sessions
 where both values are positive. Upcoming events are clearly labelled examples;
 they are not stored or connected to an event calendar.

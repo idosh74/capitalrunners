@@ -70,14 +70,15 @@ function ActivityFeed({ activities }) {
     }}>
     <div className="section-title"><div><span className="eyebrow">מתאמנים יחד</span><h2>האימונים של היום</h2></div>
       {activities.length > 1 && <div className="activity-controls">
-        <button type="button" aria-label="האימון הקודם" onClick={() => setIndex((index + activities.length - 1) % activities.length)}>›</button>
+        <button type="button" aria-label="האימון הקודם" onClick={() => setIndex((index + activities.length - 1) % activities.length)}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button>
         <span dir="ltr">{index + 1} / {activities.length}</span>
-        <button type="button" aria-label="האימון הבא" onClick={() => setIndex((index + 1) % activities.length)}>‹</button>
+        <button type="button" aria-label="האימון הבא" onClick={() => setIndex((index + 1) % activities.length)}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button>
         <button type="button" aria-label={paused ? 'הפעלת מעבר אוטומטי' : 'עצירת מעבר אוטומטי'} onClick={() => setPaused(!paused)}>{paused ? '▶' : '❚❚'}</button>
       </div>}</div>
     {activity ? <div className="activity-card">
       <div className="activity-head"><div className="avatar">{activity.name.slice(0, 1)}</div><div><h3>{activity.name}</h3><span className="muted">{activity.type}</span></div><span className="badge">היום</span></div>
       <div className="activity-stats"><div><span>מרחק כולל</span><strong>{number(Number(activity.distance))} <small>ק״מ</small></strong></div><div><span>זמן תרגיל</span><strong dir="ltr">{formatDuration(Number(activity.run_time))}</strong></div><div><span>קצב תרגיל</span><strong dir="ltr">{activity.run_distance > 0 && activity.run_time > 0 ? formatPace(Number(activity.run_time) / Number(activity.run_distance)) : '—'}</strong></div></div>
+      {activity.notes && <div className="activity-description"><span>תיאור האימון</span><p dir="auto">{activity.notes}</p></div>}
       <p className="muted">קצב וזמן מתייחסים לתרגיל, ללא תוספת המרחק.</p>
     </div> : <p className="empty">עדיין לא נרשמו אימונים עם מרחק היום.</p>}
     <a className="text-link" href="feed.php">לכל האימונים בפיד ←</a>
