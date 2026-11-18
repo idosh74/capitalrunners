@@ -29,3 +29,7 @@ sessions. The graph and weekday insights use the selected period, and average
 pace is total exercise time divided by total exercise distance for sessions
 where both values are positive. Upcoming events are clearly labelled examples;
 they are not stored or connected to an event calendar.
+
+The activity carousel advances every 4.5 seconds when multiple sessions exist.
+It pauses while hovered or when keyboard focus enters it; use its play button to
+resume. Users who prefer reduced motion start with rotation paused.

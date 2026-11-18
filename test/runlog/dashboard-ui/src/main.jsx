@@ -6,6 +6,7 @@ import './style.css';
 const number = value => new Intl.NumberFormat('he-IL', { maximumFractionDigits: 1 }).format(value);
 const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const periods = { today: 'היום', week: 'השבוע', month: 'החודש' };
+const activityRotationMs = 4500;
 const demoEvents = [
   { title: 'ריצה ארוכה קבוצתית', detail: 'שבת · אימון לדוגמה' },
   { title: 'אימון מהירות', detail: 'שלישי · אימון לדוגמה' },
@@ -53,10 +54,27 @@ function Weekdays({ insights }) {
 
 function ActivityFeed({ activities }) {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [hovered, setHovered] = useState(false);
+  useEffect(() => {
+    if (paused || hovered || activities.length < 2) return;
+    const timer = window.setTimeout(() => setIndex(current => (current + 1) % activities.length), activityRotationMs);
+    return () => window.clearTimeout(timer);
+  }, [index, activities.length, paused, hovered]);
   const activity = activities[index];
-  return <section className="panel activity-panel">
+  return <section className="panel activity-panel"
+    onMouseEnter={() => setHovered(true)}
+    onMouseLeave={() => setHovered(false)}
+    onFocusCapture={event => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setPaused(true);
+    }}>
     <div className="section-title"><div><span className="eyebrow">מתאמנים יחד</span><h2>האימונים של היום</h2></div>
-      {activity && <div className="activity-controls"><button type="button" aria-label="האימון הקודם" onClick={() => setIndex((index + activities.length - 1) % activities.length)}>›</button><span>{index + 1} / {activities.length}</span><button type="button" aria-label="האימון הבא" onClick={() => setIndex((index + 1) % activities.length)}>‹</button></div>}</div>
+      {activities.length > 1 && <div className="activity-controls">
+        <button type="button" aria-label="האימון הקודם" onClick={() => setIndex((index + activities.length - 1) % activities.length)}>›</button>
+        <span dir="ltr">{index + 1} / {activities.length}</span>
+        <button type="button" aria-label="האימון הבא" onClick={() => setIndex((index + 1) % activities.length)}>‹</button>
+        <button type="button" aria-label={paused ? 'הפעלת מעבר אוטומטי' : 'עצירת מעבר אוטומטי'} onClick={() => setPaused(!paused)}>{paused ? '▶' : '❚❚'}</button>
+      </div>}</div>
     {activity ? <div className="activity-card">
       <div className="activity-head"><div className="avatar">{activity.name.slice(0, 1)}</div><div><h3>{activity.name}</h3><span className="muted">{activity.type}</span></div><span className="badge">היום</span></div>
       <div className="activity-stats"><div><span>מרחק כולל</span><strong>{number(Number(activity.distance))} <small>ק״מ</small></strong></div><div><span>זמן תרגיל</span><strong dir="ltr">{formatDuration(Number(activity.run_time))}</strong></div><div><span>קצב תרגיל</span><strong dir="ltr">{activity.run_distance > 0 && activity.run_time > 0 ? formatPace(Number(activity.run_time) / Number(activity.run_distance)) : '—'}</strong></div></div>

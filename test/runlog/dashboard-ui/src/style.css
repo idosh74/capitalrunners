@@ -66,7 +66,7 @@ h3 { font-size: 17px; }
 .bar-track { width: 70%; max-width: 42px; flex: 1; display: flex; align-items: end; background: #10192b; border-radius: 5px; overflow: hidden; }
 .bar { width: 100%; background: #438d70; border-radius: 5px 5px 0 0; }
 .bar.peak { background: #62df7d; }
-.activity-controls { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #bdcaba; direction: ltr; }
+.activity-controls { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #bdcaba; direction: rtl; }
 .activity-controls button { border: 1px solid #3e4a3d; background: #222a3d; border-radius: 8px; width: 32px; height: 32px; color: #dae2fd; font-size: 23px; }
 .activity-card,.leader,.insights>div,.demo-events>div { background: #10192b; border: 1px solid #3e4a3d55; border-radius: 11px; padding: 16px; }
 .activity-head { display: flex; align-items: center; gap: 12px; }
