@@ -201,6 +201,7 @@
             <a id="logout" href="logout.php">התנתק</a>
             <div id="tabs">
                 <ul class="tabrow">
+                    <li><a id="dashboard" href="dashboard.php">לוח הקבוצה</a></li>
                     <li><a id="runlog" href="runlog.php">יומן ריצה</a></li>
                     <li><a id="fedd" href="feed.php">מה עשו החבר'ה</a></li>
                     <li><a id="shoes" href="shoes.php">הנעליים שלי</a></li>

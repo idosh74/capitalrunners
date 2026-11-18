@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../dist/dashboard.css">
+</head>
+<body>
+  <div id="dashboard-root"></div>
+  <script>
+    var attempts = 0;
+    var params = new URLSearchParams(location.search);
+    window.fetch = function (url) {
+      attempts++;
+      if (params.has('error') && attempts === 1) {
+        return Promise.reject(new Error('בדיקת שגיאת תקשורת'));
+      }
+      return Promise.resolve({
+        ok: true,
+        json: function () {
+          var response = {
+            status: { ecode: 1 },
+            data: {
+              today: '2026-03-10',
+              current_date: '2026-03-10',
+              week_start: '2026-03-08',
+              month_start: '2026-03-01',
+              member_name: 'בדיקה',
+              active_runners: 5,
+              days: [
+                { day: '2026-03-08', distance: 7, sessions: 1, active_runners: 1, pace_distance: 7, pace_seconds: 2100 },
+                { day: '2026-03-10', distance: 20, sessions: 2, active_runners: 2, pace_distance: 20, pace_seconds: 6000 }
+              ],
+              leaders: [
+                { id: 1, name: 'רצה א', today: 12, week: 19, month: 25 },
+                { id: 2, name: 'רץ ב', today: 8, week: 8, month: 30 }
+              ],
+              activities: [
+                { id: 1, name: 'רצה א', type: 'ריצה', distance: 12, run_distance: 12, run_time: 3600 },
+                { id: 2, name: 'רץ ב', type: 'ריצה קלה', distance: 8, run_distance: 8, run_time: 2400 }
+              ]
+            }
+          };
+          if (url.indexOf('date=2025-03-11') !== -1) {
+            response.data.today = '2025-03-11';
+            response.data.week_start = '2025-03-09';
+            response.data.month_start = '2025-03-01';
+            response.data.days = [
+              { day: '2025-03-11', distance: 8, sessions: 1, active_runners: 1, pace_distance: 8, pace_seconds: 2400 }
+            ];
+            response.data.leaders = [{ id: 2, name: 'רץ ב', today: 8, week: 8, month: 8 }];
+            response.data.activities = [{ id: 2, name: 'רץ ב', type: 'ריצה קלה', distance: 8, run_distance: 8, run_time: 2400 }];
+          }
+          if (params.has('empty')) {
+            response.data.days = [];
+            response.data.leaders = [];
+            response.data.activities = [];
+          }
+          return Promise.resolve(response);
+        }
+      });
+    };
+  </script>
+  <script type="module" src="../dist/dashboard.js"></script>
+</body>
+</html>
