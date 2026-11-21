@@ -176,8 +176,8 @@ function App() {
     const url = `php/get_dashboard_data.php?${params.toString()}`;
     fetch(url, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' })
       .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
-      .then(result => { if (Number(result.status?.ecode) !== 1 || !result.data) throw new Error(result.status?.emessage || 'תגובה לא תקינה'); setData(result.data); })
-      .catch(err => { if (err.name !== 'AbortError') setError(err.message); });
+      .then(result => { if (controller.signal.aborted) return; if (Number(result.status?.ecode) !== 1 || !result.data) throw new Error(result.status?.emessage || 'תגובה לא תקינה'); setData(result.data); })
+      .catch(err => { if (!controller.signal.aborted && err.name !== 'AbortError') setError(err.message); });
     return () => controller.abort();
   }, [retry, selectedDate, range]);
   function changeDate(date) {
@@ -186,7 +186,7 @@ function App() {
     setError('');
     setSelectedDate(date);
   }
-  if (error) return <main className="state"><h1>לא ניתן לטעון את לוח הקבוצה</h1><p>{error}</p><button type="button" onClick={() => setRetry(retry + 1)}>ניסיון נוסף</button>{selectedDate && <button type="button" onClick={() => changeDate('')}>חזרה להיום</button>}<a href="runlog.php">חזרה ליומן</a></main>;
+  if (error && !data) return <main className="state"><h1>לא ניתן לטעון את לוח הקבוצה</h1><p>{error}</p><button type="button" onClick={() => setRetry(retry + 1)}>ניסיון נוסף</button>{selectedDate && <button type="button" onClick={() => changeDate('')}>חזרה להיום</button>}<a href="runlog.php">חזרה ליומן</a></main>;
   if (!data) return <main className="state" role="status">טוען את לוח הקבוצה...</main>;
   const todayData = data.days.find(day => day.day === data.today);
   const today = sumDays(data.days, data.today, data.today);
@@ -209,8 +209,10 @@ function App() {
         <Metric label="השבוע" value={`${number(week.distance)} ק״מ`} sub={`${number(week.sessions)} אימונים · מיום ראשון`} icon="▦" tone="orange" />
         <Metric label="החודש" value={`${number(month.distance)} ק״מ`} sub={`${number(month.sessions)} אימונים מתחילת החודש`} icon="▤" tone="green" /></div>
       <div className="workspace"><div className="main-column"><section className="panel">
-        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 30: '30 ימים', 90: '90 ימים', 180: '180 ימים' }} onChange={value => { if (value !== range) { setData(null); setRange(value); } }} /></div>
-        <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />
+        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 30: '30 ימים', 90: '90 ימים', 180: '180 ימים' }} onChange={setRange} /></div>
+        {error ? <div className="radar-error" role="alert"><p>לא ניתן לטעון את מדדי הרצים: {error}</p><button type="button" onClick={() => setRetry(retry + 1)}>ניסיון נוסף</button></div>
+          : Number(data.measure_range) !== Number(range) ? <p className="empty" role="status">טוען מדדי רצים...</p>
+            : <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />}
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>
         <div className="insights"><div><span>היום המוביל במרחק</span><strong>{insights.busiest === null ? '—' : `יום ${dayNames[insights.busiest]}`}</strong><small>בתקופה שנבחרה</small></div><div><span>קצב תרגיל ממוצע</span><strong dir="ltr">{formatPace(insights.pace)}</strong><small>דקות לק״מ · בתקופה שנבחרה</small></div><div><span>ממוצע מרחק שבועי</span><strong>{number(trend.reduce((sum, day) => sum + day.distance, 0) * 7 / Number(range))} ק״מ</strong><small>על פני התקופה שנבחרה</small></div><div><span>החודש הקודם</span><strong>{number(previousMonth.distance)} ק״מ</strong><small>{number(previousMonth.sessions)} אימונים</small></div></div>

@@ -26,6 +26,12 @@
               week_start: '2026-03-08',
               month_start: '2026-03-01',
               member_name: 'בדיקה',
+              member_id: 1,
+              measure_range: Number(new URL(url, location.href).searchParams.get('range') || 30),
+              measure_runners: [
+                { id: 1, name: 'רצה א', persistence: 110, intensity: 95, commitment: 102 },
+                { id: 2, name: 'רץ ב', persistence: 90, intensity: 105, commitment: 97 }
+              ],
               active_runners: 5,
               days: [
                 { day: '2026-03-08', distance: 7, sessions: 1, active_runners: 1, pace_distance: 7, pace_seconds: 2100 },
@@ -52,6 +58,7 @@
             response.data.activities = [{ id: 2, name: 'רץ ב', type: 'ריצה קלה', distance: 8, run_distance: 8, run_time: 2400, notes: 'אימון קודם' }];
           }
           if (params.has('empty')) {
+            response.data.measure_runners = [];
             response.data.days = [];
             response.data.leaders = [];
             response.data.activities = [];

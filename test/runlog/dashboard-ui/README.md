@@ -33,6 +33,7 @@ they are not stored or connected to an event calendar.
 The radar offers 30-, 90-, and 180-day periods and includes only currently active (visible profile) runners with at
 least 20 recorded events in the selected period, including events with zero
 distance. The period ends on the selected reference date (today by default).
+Changing the period reloads the radar without resetting the rest of the dashboard.
 Distance for these measures is run distance plus cooldown, excluding warmup.
 Distance per workout is rounded to two decimals before calculating the
 unweighted group average. Persistence and intensity are rounded to whole
