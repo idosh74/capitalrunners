@@ -30,12 +30,13 @@ pace is total exercise time divided by total exercise distance for sessions
 where both values are positive. Upcoming events are clearly labelled examples;
 they are not stored or connected to an event calendar.
 
-The radar offers 30-, 90-, and 180-day periods and includes only currently active (visible profile) runners with at
-least 20 recorded events in the selected period, including events with zero
-distance. The period ends on the selected reference date (today by default).
+The radar offers 30-, 90-, and 180-day periods and includes only currently active
+(visible profile) runners with at least 20 sessions with positive total distance
+in the selected period. The period ends on the selected reference date (today by default).
 An expandable explanation below the radar describes the measures and comparison group.
 Changing the period reloads the radar without resetting the rest of the dashboard.
-Distance for these measures is run distance plus cooldown, excluding warmup.
+Distance for these measures is run distance plus the additional warmup and
+cooldown distance, stored across `warmup_distance` and `cooldown_distance`.
 Distance per workout is rounded to two decimals before calculating the
 unweighted group average. Persistence and intensity are rounded to whole
 numbers, and commitment is the rounded geometric mean of those indices.

@@ -221,7 +221,7 @@ function App() {
             <dt>🎯 מחויבות</dt><dd>מדד משולב: השורש הריבועי של מכפלת מדדי ההתמדה והעוצמה המעוגלים. ממוצע המחויבות בקבוצה אינו בהכרח 100.</dd>
           </dl>
           <p>בהתמדה ובעוצמה, 100 הוא ממוצע הקבוצה; 120 הוא 20% מעל הממוצע ו־80 הוא 20% מתחתיו.</p>
-          <p>ההשוואה כוללת רצים בעלי פרופיל גלוי עם לפחות 20 אימונים בתקופה שנבחרה, כולל אימונים ללא מרחק. המרחק כולל ריצה ושחרור, ללא חימום.</p>
+          <p>ההשוואה כוללת רצים בעלי פרופיל גלוי עם לפחות 20 אימונים בעלי מרחק בתקופה שנבחרה. המרחק כולל את מרחק התרגיל ותוספת המרחק (חימום ושחרור).</p>
         </details>
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>

@@ -57,14 +57,13 @@ function getDashboardData($conn, $today, $range = 30, $memberId = null) {
     $stmt->execute(array(':today' => $day, ':end' => $end));
     $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $measureDistance = '(COALESCE(e.run_distance, 0) + COALESCE(e.cooldown_distance, 0))';
     $sql = "SELECT r.id, r.member_name AS name,
         COUNT(*) AS workouts,
-        ROUND(SUM($measureDistance), 1) AS distance,
-        ROUND(SUM($measureDistance) / COUNT(*), 2) AS km_per_workout
+        ROUND(SUM($distance), 1) AS distance,
+        ROUND(SUM($distance) / COUNT(*), 2) AS km_per_workout
         FROM tl_runners r
         JOIN tl_events e ON e.runner_id = r.id
-        WHERE r.m_show_profile = 1 AND e.run_date >= :start AND e.run_date < :end
+        WHERE r.m_show_profile = 1 AND e.run_date >= :start AND e.run_date < :end AND $distance > 0
         GROUP BY r.id, r.member_name
         HAVING COUNT(*) >= 20
         ORDER BY r.member_name";

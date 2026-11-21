@@ -77,24 +77,28 @@ $id = 100;
 foreach (array(1 => 20, 2 => 21, 3 => 20, 4 => 19) as $runnerId => $count) {
     for ($i = 0; $i < $count; $i++) {
         $date = $i === 0 ? '2027-03-04 00:00:00' : '2027-03-10 23:59:59';
-        $run = $runnerId === 1 ? ($i === 0 ? 0 : 5.35) : 2.24;
-        $cooldown = $runnerId === 1 ? ($i === 0 ? 0 : 0.11) : 0.03;
-        $insert->execute(array($id++, $runnerId, $date, $run, 99, $cooldown));
+        $run = $runnerId === 1 ? ($i < 3 ? 0 : 5.35) : 2.24;
+        $warmup = $runnerId === 1 ? ($i === 1 ? 0.5 : ($i >= 3 ? 0.11 : 0)) : 0;
+        $cooldown = $runnerId === 1 ? ($i === 2 ? 0.6 : 0) : 0.03;
+        $insert->execute(array($id++, $runnerId, $date, $run, $warmup, $cooldown));
     }
 }
+$insert->execute(array($id++, 1, '2027-03-10 12:00:00', 5.35, 0.11, 0));
+$insert->execute(array($id++, 4, '2027-03-10 12:00:00', null, null, null));
 $insert->execute(array($id++, 1, '2027-03-03 23:59:59', 9, 0, 0));
 $insert->execute(array($id++, 1, '2027-03-11 00:00:00', 9, 0, 0));
 $measureDate = new DateTimeImmutable('2027-03-10');
 $insert->execute(array($id++, 4, $measureDate->modify('-179 days')->format('Y-m-d') . ' 00:00:00', 1, 0, 0));
 $insert->execute(array($id++, 4, $measureDate->modify('-180 days')->format('Y-m-d') . ' 23:59:59', 1, 0, 0));
 
-// Compare the dashboard result with the supplied SQL, using a seven-day window.
+// Compare the indices with the supplied SQL adjusted for total positive distance.
 $referenceSql = "WITH runner_stats AS (
     SELECT r.id, r.member_name, COUNT(*) AS workouts,
-        ROUND(SUM(COALESCE(e.run_distance, 0) + COALESCE(e.cooldown_distance, 0)), 1) AS total_km,
-        ROUND(1.0 * SUM(COALESCE(e.run_distance, 0) + COALESCE(e.cooldown_distance, 0)) / COUNT(*), 2) AS km_per_workout
+        ROUND(SUM(COALESCE(e.run_distance, 0) + COALESCE(e.warmup_distance, 0) + COALESCE(e.cooldown_distance, 0)), 1) AS total_km,
+        ROUND(1.0 * SUM(COALESCE(e.run_distance, 0) + COALESCE(e.warmup_distance, 0) + COALESCE(e.cooldown_distance, 0)) / COUNT(*), 2) AS km_per_workout
     FROM tl_runners r INNER JOIN tl_events e ON e.runner_id = r.id
     WHERE r.m_show_profile = 1 AND e.run_date >= :start AND e.run_date < :end
+        AND COALESCE(e.run_distance, 0) + COALESCE(e.warmup_distance, 0) + COALESCE(e.cooldown_distance, 0) > 0
     GROUP BY r.id, r.member_name HAVING COUNT(*) >= 20
 ), group_avg AS (
     SELECT COUNT(*) AS runners_in_group, AVG(workouts) AS avg_workouts, AVG(km_per_workout) AS avg_km_per_workout
@@ -112,7 +116,8 @@ $expected = array_column($reference->fetchAll(PDO::FETCH_ASSOC), null, 'id');
 $measures = getDashboardData($conn, new DateTimeImmutable('2027-03-10'), 7, 1);
 $measureRunners = array_column($measures['measure_runners'], null, 'id');
 if (array_keys($measureRunners) !== array(1, 2) || count($expected) !== 2 ||
-    $measureRunners[1]['workouts'] !== 20 || $measureRunners[2]['workouts'] !== 21) {
+    $measureRunners[1]['workouts'] !== 20 || $measureRunners[2]['workouts'] !== 21 ||
+    $measureRunners[1]['distance'] !== 99.4 || $measureRunners[1]['km_per_workout'] !== 4.97) {
     throw new RuntimeException('Runner eligibility or date boundaries failed: ' . json_encode($measureRunners));
 }
 foreach ($measureRunners as $runnerId => $runner) {
@@ -125,7 +130,7 @@ foreach ($measureRunners as $runnerId => $runner) {
 }
 if ($measures['measure_range'] !== 7 || (int)$measures['member_id'] !== 1 ||
     $measures['measure_averages']['workouts'] !== 20.5 ||
-    abs($measures['measure_averages']['km_per_workout'] - 3.73) > 0.000001 ||
+    abs($measures['measure_averages']['km_per_workout'] - 3.62) > 0.000001 ||
     getDashboardData($conn, new DateTimeImmutable('2027-03-10'), 30, 1)['measure_runners'][0]['workouts'] !== 21) {
     throw new RuntimeException('Runner averages or selected period failed.');
 }
@@ -136,9 +141,16 @@ if ($halfYear['measure_range'] !== 180 || !isset($halfYearRunners[4]) || $halfYe
 }
 
 for ($i = 0; $i < 20; $i++) {
-    $insert->execute(array($id++, 5, '2025-01-01 10:00:00', null, 2, null));
+    $insert->execute(array($id++, 5, '2025-01-01 10:00:00', null, 0, null));
 }
-$zero = getDashboardData($conn, new DateTimeImmutable('2025-01-01'), 7, 5);
+$noDistance = getDashboardData($conn, new DateTimeImmutable('2025-01-01'), 7, 5);
+if ($noDistance['measure_runners'] || $noDistance['measure_averages']['workouts'] !== null) {
+    throw new RuntimeException('Sessions without distance must not count towards eligibility.');
+}
+for ($i = 0; $i < 20; $i++) {
+    $insert->execute(array($id++, 5, '2025-02-01 10:00:00', null, 0, 0.001));
+}
+$zero = getDashboardData($conn, new DateTimeImmutable('2025-02-01'), 7, 5);
 $zeroRunner = $zero['measure_runners'][0];
 if (count($zero['measure_runners']) !== 1 || $zeroRunner['workouts'] !== 20 ||
     $zeroRunner['persistence'] !== 100.0 || $zeroRunner['intensity'] !== null || $zeroRunner['commitment'] !== null) {
