@@ -213,6 +213,16 @@ function App() {
         {error ? <div className="radar-error" role="alert"><p>לא ניתן לטעון את מדדי הרצים: {error}</p><button type="button" onClick={() => setRetry(retry + 1)}>ניסיון נוסף</button></div>
           : Number(data.measure_range) !== Number(range) ? <p className="empty" role="status">טוען מדדי רצים...</p>
             : <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />}
+        <details className="measure-help">
+          <summary>מה המשמעות של המדדים?</summary>
+          <dl>
+            <dt>🔥 התמדה</dt><dd>מספר האימונים של הרץ ביחס למספר האימונים הממוצע בקבוצה.</dd>
+            <dt>⚡ עוצמה</dt><dd>המרחק הממוצע לאימון של הרץ ביחס לממוצע הרצים בקבוצה. המדד מתאר אורך אימון, לא מאמץ או מהירות.</dd>
+            <dt>🎯 מחויבות</dt><dd>מדד משולב: השורש הריבועי של מכפלת מדדי ההתמדה והעוצמה המעוגלים. ממוצע המחויבות בקבוצה אינו בהכרח 100.</dd>
+          </dl>
+          <p>בהתמדה ובעוצמה, 100 הוא ממוצע הקבוצה; 120 הוא 20% מעל הממוצע ו־80 הוא 20% מתחתיו.</p>
+          <p>ההשוואה כוללת רצים בעלי פרופיל גלוי עם לפחות 20 אימונים בתקופה שנבחרה, כולל אימונים ללא מרחק. המרחק כולל ריצה ושחרור, ללא חימום.</p>
+        </details>
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>
         <div className="insights"><div><span>היום המוביל במרחק</span><strong>{insights.busiest === null ? '—' : `יום ${dayNames[insights.busiest]}`}</strong><small>בתקופה שנבחרה</small></div><div><span>קצב תרגיל ממוצע</span><strong dir="ltr">{formatPace(insights.pace)}</strong><small>דקות לק״מ · בתקופה שנבחרה</small></div><div><span>ממוצע מרחק שבועי</span><strong>{number(trend.reduce((sum, day) => sum + day.distance, 0) * 7 / Number(range))} ק״מ</strong><small>על פני התקופה שנבחרה</small></div><div><span>החודש הקודם</span><strong>{number(previousMonth.distance)} ק״מ</strong><small>{number(previousMonth.sessions)} אימונים</small></div></div>
