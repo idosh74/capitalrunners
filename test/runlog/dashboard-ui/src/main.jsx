@@ -44,14 +44,14 @@ function TrendChart({ trend }) {
 }
 
 function RadarChart({ runners, memberId, selectedRunnerId, onRunnerChange, range }) {
-  const selected = runners.find(runner => String(runner.id) === String(selectedRunnerId))
-    || runners.find(runner => String(runner.id) === String(memberId))
-    || runners[0];
+  const runnerId = selectedRunnerId || memberId;
+  const selected = runners.find(runner => String(runner.id) === String(runnerId));
   const values = selected ? [
-    { label: 'התמדה', value: Number(selected.persistence), icon: '🔥' },
-    { label: 'עוצמה', value: Number(selected.intensity), icon: '⚡' },
-    { label: 'מחויבות', value: Number(selected.commitment), icon: '🎯' },
+    { label: 'התמדה', value: selected.persistence, icon: '🔥' },
+    { label: 'עוצמה', value: selected.intensity, icon: '⚡' },
+    { label: 'מחויבות', value: selected.commitment, icon: '🎯' },
   ] : [];
+  const hasAllValues = values.every(item => item.value !== null);
   const max = Math.max(150, ...values.map(item => item.value || 0));
   const scaleMax = Math.ceil(max / 50) * 50;
   const center = { x: 180, y: 132 };
@@ -73,14 +73,15 @@ function RadarChart({ runners, memberId, selectedRunnerId, onRunnerChange, range
   return <div className="radar-wrap">
     <div className="radar-toolbar">
       <label>הרץ
-        <select value={selected ? String(selected.id) : ''} onChange={event => onRunnerChange(event.target.value)}>
+        <select value={selected ? String(selected.id) : ''} onChange={event => onRunnerChange(event.target.value)} disabled={!runners.length}>
+          <option value="" disabled>בחירת רץ או רצה</option>
           {runners.map(runner => <option key={runner.id} value={String(runner.id)}>{runner.name}</option>)}
         </select>
       </label>
-      <span className="muted">תקופה: {range} ימים · 100 = ממוצע הקבוצה</span>
+      <span className="muted">תקופה: {range} ימים · 100 = ממוצע הקבוצה בהתמדה ובעוצמה</span>
     </div>
     {selected ? <>
-      <svg viewBox="0 0 360 230" className="radar-chart" role="img" aria-label={`מדדי הקבוצה של ${selected.name}`}>
+      {hasAllValues ? <svg viewBox="0 0 360 230" className="radar-chart" role="img" aria-label={`מדדי הקבוצה של ${selected.name}`}>
         {[0.25, 0.5, 0.75, 1].map(ratio => {
           const ring = values.map((item, index) => {
             const point = pointFor(scaleMax * ratio, index);
@@ -104,18 +105,9 @@ function RadarChart({ runners, memberId, selectedRunnerId, onRunnerChange, range
         {labels.map(item => <text key={item.label} x={item.x} y={item.y} textAnchor={item.textAnchor} className="radar-label">
           <tspan className="radar-emoji">{item.icon}</tspan><tspan dx="7">{item.label}</tspan>
         </text>)}
-      </svg>
-      <div className="radar-scores">{values.map(item => <div key={item.label}><span>{item.icon} {item.label}</span><strong>{number(item.value)}</strong></div>)}</div>
-    </> : <p className="empty">אין נתוני מדדים לרצים הפעילים בתקופה זו.</p>}
-  </div>;
-}
-
-function Weekdays({ insights }) {
-  const max = Math.max(...insights.weekdays, 1);
-  return <div className="weekday-section"><div className="section-title small"><div><span className="eyebrow">התפלגות המרחק</span><h3>לפי יום בשבוע</h3></div><span className="muted">בתקופה שנבחרה</span></div>
-    <div className="bars">{insights.weekdays.map((value, index) => <div className="bar-column" key={dayNames[index]} title={`${dayNames[index]}: ${number(value)} ק״מ`}>
-      <span>{number(value)}</span><div className="bar-track"><div className={`bar ${insights.busiest === index ? 'peak' : ''}`} style={{ height: `${value ? Math.max(value / max * 100, 4) : 0}%` }} /></div><small>{dayNames[index]}</small>
-    </div>)}</div>
+      </svg> : <p className="empty">לא ניתן לחשב עוצמה ומחויבות כאשר ממוצע המרחק לאימון הוא אפס.</p>}
+      <div className="radar-scores">{values.map(item => <div key={item.label}><span>{item.icon} {item.label}</span><strong>{item.value === null ? '—' : number(item.value)}</strong></div>)}</div>
+    </> : <p className="empty">{runners.length ? 'הרץ הנבחר אינו עומד בסף של 20 אימונים בתקופה זו. ניתן לבחור רץ אחר.' : 'אין רצים פעילים עם לפחות 20 אימונים בתקופה זו.'}</p>}
   </div>;
 }
 
@@ -217,13 +209,13 @@ function App() {
         <Metric label="השבוע" value={`${number(week.distance)} ק״מ`} sub={`${number(week.sessions)} אימונים · מיום ראשון`} icon="▦" tone="orange" />
         <Metric label="החודש" value={`${number(month.distance)} ק״מ`} sub={`${number(month.sessions)} אימונים מתחילת החודש`} icon="▤" tone="green" /></div>
       <div className="workspace"><div className="main-column"><section className="panel">
-        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 7: '7 ימים', 30: '30 ימים', 90: '90 ימים', 365: 'שנה' }} onChange={setRange} /></div>
-        <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} /><Weekdays insights={insights} />
+        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 7: '7 ימים', 30: '30 ימים', 90: '90 ימים', 365: 'שנה' }} onChange={value => { if (value !== range) { setData(null); setRange(value); } }} /></div>
+        <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>
         <div className="insights"><div><span>היום המוביל במרחק</span><strong>{insights.busiest === null ? '—' : `יום ${dayNames[insights.busiest]}`}</strong><small>בתקופה שנבחרה</small></div><div><span>קצב תרגיל ממוצע</span><strong dir="ltr">{formatPace(insights.pace)}</strong><small>דקות לק״מ · בתקופה שנבחרה</small></div><div><span>ממוצע מרחק שבועי</span><strong>{number(trend.reduce((sum, day) => sum + day.distance, 0) * 7 / Number(range))} ק״מ</strong><small>על פני התקופה שנבחרה</small></div><div><span>החודש הקודם</span><strong>{number(previousMonth.distance)} ק״מ</strong><small>{number(previousMonth.sessions)} אימונים</small></div></div>
       </section><section className="panel"><div className="section-title"><div><span className="eyebrow">להמחשה בלבד</span><h2>אירועים קרובים</h2></div><span className="symbol">▦</span></div><p className="demo-notice">אירועים לדוגמה בלבד — אינם מבוססים על נתוני הקבוצה.</p><div className="demo-events">{demoEvents.map(event => <div key={event.title}><span className="event-icon">◷</span><div><strong>{event.title}</strong><small>{event.detail}</small></div><span className="demo-badge">דוגמה</span></div>)}</div></section></aside></div>
-      <footer>רצי הבירה · נתונים לאימונים עם מרחק בלבד · השבוע מתחיל ביום ראשון</footer>
+      <footer>רצי הבירה · נתוני מרחק לאימונים עם מרחק בלבד · השבוע מתחיל ביום ראשון</footer>
     </main>
   </>;
 }

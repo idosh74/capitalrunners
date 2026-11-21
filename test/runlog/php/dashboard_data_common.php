@@ -57,15 +57,16 @@ function getDashboardData($conn, $today, $range = 30, $memberId = null) {
     $stmt->execute(array(':today' => $day, ':end' => $end));
     $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $measureDistance = '(COALESCE(e.run_distance, 0) + COALESCE(e.cooldown_distance, 0))';
     $sql = "SELECT r.id, r.member_name AS name,
-        COUNT(e.id) AS workouts,
-        COALESCE(SUM($distance), 0) AS distance
+        COUNT(*) AS workouts,
+        ROUND(SUM($measureDistance), 1) AS distance,
+        ROUND(SUM($measureDistance) / COUNT(*), 2) AS km_per_workout
         FROM tl_runners r
-        LEFT JOIN tl_events e ON e.runner_id = r.id
-            AND e.run_date >= :start AND e.run_date < :end
-            AND $distance > 0
-        WHERE r.m_show_profile = 1
+        JOIN tl_events e ON e.runner_id = r.id
+        WHERE r.m_show_profile = 1 AND e.run_date >= :start AND e.run_date < :end
         GROUP BY r.id, r.member_name
+        HAVING COUNT(*) >= 20
         ORDER BY r.member_name";
     $stmt = $conn->prepare($sql);
     $stmt->execute(array(':start' => $measuresStart, ':end' => $end));
@@ -73,32 +74,27 @@ function getDashboardData($conn, $today, $range = 30, $memberId = null) {
 
     $persistenceTotal = 0.0;
     $intensityTotal = 0.0;
-    $intensityRunners = 0;
     foreach ($runners as &$runner) {
-        $workouts = (int)$runner['workouts'];
-        $distanceTotal = (float)$runner['distance'];
-        $runner['workouts'] = $workouts;
-        $runner['distance'] = $distanceTotal;
-        $runner['km_per_workout'] = $workouts > 0 ? $distanceTotal / $workouts : 0.0;
-        $persistenceTotal += $workouts;
-        if ($runner['km_per_workout'] > 0) {
-            $intensityTotal += $runner['km_per_workout'];
-            $intensityRunners++;
-        }
+        $runner['workouts'] = (int)$runner['workouts'];
+        $runner['distance'] = (float)$runner['distance'];
+        $runner['km_per_workout'] = (float)$runner['km_per_workout'];
+        $persistenceTotal += $runner['workouts'];
+        $intensityTotal += $runner['km_per_workout'];
     }
     unset($runner);
 
     $runnerCount = count($runners);
-    $averageWorkouts = $runnerCount > 0 ? $persistenceTotal / $runnerCount : 0.0;
-    $averageKmPerWorkout = $intensityRunners > 0 ? $intensityTotal / $intensityRunners : 0.0;
+    $averageWorkouts = $runnerCount > 0 ? $persistenceTotal / $runnerCount : null;
+    $averageKmPerWorkout = $runnerCount > 0 ? $intensityTotal / $runnerCount : null;
     foreach ($runners as &$runner) {
-        $runner['persistence'] = $averageWorkouts > 0
-            ? round($runner['workouts'] / $averageWorkouts * 100, 1)
-            : 0.0;
-        $runner['intensity'] = $averageKmPerWorkout > 0
-            ? round($runner['km_per_workout'] / $averageKmPerWorkout * 100, 1)
-            : 0.0;
-        $runner['commitment'] = round(sqrt($runner['persistence'] * $runner['intensity']), 1);
+        $runner['persistence'] = $averageWorkouts != 0
+            ? round($runner['workouts'] / $averageWorkouts * 100)
+            : null;
+        $runner['intensity'] = $averageKmPerWorkout != 0
+            ? round($runner['km_per_workout'] / $averageKmPerWorkout * 100)
+            : null;
+        $product = $runner['intensity'] === null ? null : $runner['persistence'] * $runner['intensity'];
+        $runner['commitment'] = $product !== null && $product >= 0 ? round(sqrt($product)) : null;
     }
     unset($runner);
 
@@ -111,8 +107,8 @@ function getDashboardData($conn, $today, $range = 30, $memberId = null) {
         'member_id' => $memberId,
         'measure_range' => $range,
         'measure_averages' => array(
-            'workouts' => round($averageWorkouts, 1),
-            'km_per_workout' => round($averageKmPerWorkout, 1)
+            'workouts' => $averageWorkouts,
+            'km_per_workout' => $averageKmPerWorkout
         ),
         'measure_runners' => $runners,
         'active_runners' => $activeRunners,
