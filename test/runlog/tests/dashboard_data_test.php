@@ -84,6 +84,9 @@ foreach (array(1 => 20, 2 => 21, 3 => 20, 4 => 19) as $runnerId => $count) {
 }
 $insert->execute(array($id++, 1, '2027-03-03 23:59:59', 9, 0, 0));
 $insert->execute(array($id++, 1, '2027-03-11 00:00:00', 9, 0, 0));
+$measureDate = new DateTimeImmutable('2027-03-10');
+$insert->execute(array($id++, 4, $measureDate->modify('-179 days')->format('Y-m-d') . ' 00:00:00', 1, 0, 0));
+$insert->execute(array($id++, 4, $measureDate->modify('-180 days')->format('Y-m-d') . ' 23:59:59', 1, 0, 0));
 
 // Compare the dashboard result with the supplied SQL, using a seven-day window.
 $referenceSql = "WITH runner_stats AS (
@@ -125,6 +128,11 @@ if ($measures['measure_range'] !== 7 || (int)$measures['member_id'] !== 1 ||
     abs($measures['measure_averages']['km_per_workout'] - 3.73) > 0.000001 ||
     getDashboardData($conn, new DateTimeImmutable('2027-03-10'), 30, 1)['measure_runners'][0]['workouts'] !== 21) {
     throw new RuntimeException('Runner averages or selected period failed.');
+}
+$halfYear = getDashboardData($conn, $measureDate, 180, 1);
+$halfYearRunners = array_column($halfYear['measure_runners'], null, 'id');
+if ($halfYear['measure_range'] !== 180 || !isset($halfYearRunners[4]) || $halfYearRunners[4]['workouts'] !== 20) {
+    throw new RuntimeException('The 180-day period must include its first day and exclude the previous day.');
 }
 
 for ($i = 0; $i < 20; $i++) {

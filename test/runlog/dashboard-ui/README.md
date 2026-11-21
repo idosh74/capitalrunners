@@ -30,7 +30,7 @@ pace is total exercise time divided by total exercise distance for sessions
 where both values are positive. Upcoming events are clearly labelled examples;
 they are not stored or connected to an event calendar.
 
-The radar includes only currently active (visible profile) runners with at
+The radar offers 30-, 90-, and 180-day periods and includes only currently active (visible profile) runners with at
 least 20 recorded events in the selected period, including events with zero
 distance. The period ends on the selected reference date (today by default).
 Distance for these measures is run distance plus cooldown, excluding warmup.

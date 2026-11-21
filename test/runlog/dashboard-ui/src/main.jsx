@@ -209,7 +209,7 @@ function App() {
         <Metric label="השבוע" value={`${number(week.distance)} ק״מ`} sub={`${number(week.sessions)} אימונים · מיום ראשון`} icon="▦" tone="orange" />
         <Metric label="החודש" value={`${number(month.distance)} ק״מ`} sub={`${number(month.sessions)} אימונים מתחילת החודש`} icon="▤" tone="green" /></div>
       <div className="workspace"><div className="main-column"><section className="panel">
-        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 7: '7 ימים', 30: '30 ימים', 90: '90 ימים', 365: 'שנה' }} onChange={value => { if (value !== range) { setData(null); setRange(value); } }} /></div>
+        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 30: '30 ימים', 90: '90 ימים', 180: '180 ימים' }} onChange={value => { if (value !== range) { setData(null); setRange(value); } }} /></div>
         <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>

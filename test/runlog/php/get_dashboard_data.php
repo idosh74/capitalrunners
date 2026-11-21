@@ -14,7 +14,7 @@ if (array_key_exists('date', $_GET)) {
 
 try {
     $conn = getConnection();
-    $range = array_key_exists('range', $_GET) && in_array((string)$_GET['range'], array('7', '30', '90', '365'), true)
+    $range = array_key_exists('range', $_GET) && in_array((string)$_GET['range'], array('7', '30', '90', '180', '365'), true)
         ? (int)$_GET['range']
         : 30;
     $data = getDashboardData($conn, $date, $range, $memberAuthentication->getMemberId());
