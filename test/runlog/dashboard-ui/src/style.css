@@ -59,6 +59,21 @@ h3 { font-size: 17px; }
 .trend-line { stroke: #62df7d; stroke-width: 3; stroke-linejoin: round; }
 .gridline { stroke-width: 1; }
 .chart-axis { display: flex; justify-content: space-between; color: #89978e; font-size: 11px; }
+.radar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 2px; }
+.radar-toolbar label { display: flex; align-items: center; gap: 8px; color: #bdcaba; font-size: 12px; }
+.radar-toolbar select { min-width: 150px; padding: 8px 10px; border: 1px solid #3e4a3d; border-radius: 8px; background: #10192b; color: #dae2fd; font: inherit; }
+.radar-chart { width: 100%; max-height: 260px; margin: 4px auto 0; direction: ltr; color: #62df7d; }
+.radar-grid { stroke: #4b5a63; stroke-width: 1; }
+.radar-axis { stroke: #3e4a3d; stroke-width: 1; }
+.radar-average { stroke: #89ceff; stroke-width: 1.5; stroke-dasharray: 5 5; }
+.radar-area { fill: #62df7d30; stroke: #62df7d; stroke-width: 3; }
+.radar-point { fill: #62df7d; stroke: #dffff0; stroke-width: 2; }
+.radar-label { fill: #dae2fd; font-size: 15px; font-weight: 700; }
+.radar-emoji { fill: #62df7d; font-size: 16px; }
+.radar-scores { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.radar-scores div { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #10192b; border: 1px solid #3e4a3d55; border-radius: 10px; padding: 12px; }
+.radar-scores span { color: #bdcaba; font-size: 12px; }
+.radar-scores strong { color: #62df7d; font-size: 22px; direction: ltr; }
 .weekday-section { border-top: 1px solid #3e4a3d66; margin-top: 22px; padding-top: 20px; }
 .section-title.small { margin-bottom: 12px; }
 .bars { display: flex; gap: 12px; justify-content: space-around; height: 140px; }

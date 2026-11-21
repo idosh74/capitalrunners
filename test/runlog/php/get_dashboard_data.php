@@ -14,7 +14,10 @@ if (array_key_exists('date', $_GET)) {
 
 try {
     $conn = getConnection();
-    $data = getDashboardData($conn, $date);
+    $range = array_key_exists('range', $_GET) && in_array((string)$_GET['range'], array('7', '30', '90', '365'), true)
+        ? (int)$_GET['range']
+        : 30;
+    $data = getDashboardData($conn, $date, $range, $memberAuthentication->getMemberId());
     $data['current_date'] = $currentDate->format('Y-m-d');
     $data['member_name'] = $memberAuthentication->getMemberName();
     echo returnJSONsuccess($data);

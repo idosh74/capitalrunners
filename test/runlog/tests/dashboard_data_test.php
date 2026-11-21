@@ -70,6 +70,24 @@ $empty = getDashboardData($conn, new DateTimeImmutable('2029-01-07'));
 if ($empty['week_start'] !== '2029-01-07' || $empty['days'] || $empty['leaders'] || $empty['activities']) {
     throw new RuntimeException('Empty and Sunday boundary handling failed.');
 }
+
+$measures = getDashboardData($conn, new DateTimeImmutable('2026-03-10'), 30, 1);
+if ($measures['measure_range'] !== 30 || (int)$measures['member_id'] !== 1 ||
+    (float)$measures['measure_averages']['workouts'] !== 2.0 ||
+    (float)$measures['measure_averages']['km_per_workout'] !== 4.5) {
+    throw new RuntimeException('Unexpected runner measure averages: ' . json_encode($measures['measure_averages']));
+}
+$measureRunners = array_column($measures['measure_runners'], null, 'id');
+if (!isset($measureRunners[1]) || !isset($measureRunners[2]) || isset($measureRunners[3]) ||
+    (int)$measureRunners[1]['workouts'] !== 3 ||
+    (float)$measureRunners[1]['persistence'] !== 150.0 ||
+    (float)$measureRunners[1]['intensity'] !== 111.1 ||
+    (float)$measureRunners[1]['commitment'] !== 129.1 ||
+    (float)$measureRunners[2]['persistence'] !== 50.0 ||
+    (float)$measureRunners[2]['intensity'] !== 88.9 ||
+    (float)$measureRunners[2]['commitment'] !== 66.7) {
+    throw new RuntimeException('Unexpected runner radar measures: ' . json_encode($measureRunners));
+}
 $conn->exec('DROP TABLE tl_events');
 try {
     getDashboardData($conn, new DateTimeImmutable('2026-03-10'));

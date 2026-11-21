@@ -43,6 +43,73 @@ function TrendChart({ trend }) {
   </div>;
 }
 
+function RadarChart({ runners, memberId, selectedRunnerId, onRunnerChange, range }) {
+  const selected = runners.find(runner => String(runner.id) === String(selectedRunnerId))
+    || runners.find(runner => String(runner.id) === String(memberId))
+    || runners[0];
+  const values = selected ? [
+    { label: 'התמדה', value: Number(selected.persistence), icon: '🔥' },
+    { label: 'עוצמה', value: Number(selected.intensity), icon: '⚡' },
+    { label: 'מחויבות', value: Number(selected.commitment), icon: '🎯' },
+  ] : [];
+  const max = Math.max(150, ...values.map(item => item.value || 0));
+  const scaleMax = Math.ceil(max / 50) * 50;
+  const center = { x: 180, y: 132 };
+  const radius = 108;
+  const pointFor = (value, index) => {
+    const angle = (-90 + index * 120) * Math.PI / 180;
+    const scaled = Math.min(Number(value), scaleMax) / scaleMax * radius;
+    return { x: center.x + Math.cos(angle) * scaled, y: center.y + Math.sin(angle) * scaled };
+  };
+  const polygon = values.map((item, index) => {
+    const point = pointFor(item.value, index);
+    return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+  }).join(' ');
+  const labels = [
+    { x: 180, y: 8, textAnchor: 'middle', icon: '🔥', label: 'התמדה' },
+    { x: 312, y: 190, textAnchor: 'middle', icon: '⚡', label: 'עוצמה' },
+    { x: 48, y: 190, textAnchor: 'middle', icon: '🎯', label: 'מחויבות' },
+  ];
+  return <div className="radar-wrap">
+    <div className="radar-toolbar">
+      <label>הרץ
+        <select value={selected ? String(selected.id) : ''} onChange={event => onRunnerChange(event.target.value)}>
+          {runners.map(runner => <option key={runner.id} value={String(runner.id)}>{runner.name}</option>)}
+        </select>
+      </label>
+      <span className="muted">תקופה: {range} ימים · 100 = ממוצע הקבוצה</span>
+    </div>
+    {selected ? <>
+      <svg viewBox="0 0 360 230" className="radar-chart" role="img" aria-label={`מדדי הקבוצה של ${selected.name}`}>
+        {[0.25, 0.5, 0.75, 1].map(ratio => {
+          const ring = values.map((item, index) => {
+            const point = pointFor(scaleMax * ratio, index);
+            return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+          }).join(' ');
+          return <polygon key={ratio} points={ring} fill="none" className="radar-grid" />;
+        })}
+        {values.map((item, index) => {
+          const end = pointFor(scaleMax, index);
+          return <line key={item.label} x1={center.x} y1={center.y} x2={end.x} y2={end.y} className="radar-axis" />;
+        })}
+        {scaleMax > 100 && <polygon points={values.map((item, index) => {
+          const point = pointFor(100, index);
+          return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+        }).join(' ')} fill="none" className="radar-average" />}
+        <polygon points={polygon} fill="currentColor" className="radar-area" />
+        {values.map((item, index) => {
+          const point = pointFor(item.value, index);
+          return <circle key={item.label} cx={point.x} cy={point.y} r="5" className="radar-point" />;
+        })}
+        {labels.map(item => <text key={item.label} x={item.x} y={item.y} textAnchor={item.textAnchor} className="radar-label">
+          <tspan className="radar-emoji">{item.icon}</tspan><tspan dx="7">{item.label}</tspan>
+        </text>)}
+      </svg>
+      <div className="radar-scores">{values.map(item => <div key={item.label}><span>{item.icon} {item.label}</span><strong>{number(item.value)}</strong></div>)}</div>
+    </> : <p className="empty">אין נתוני מדדים לרצים הפעילים בתקופה זו.</p>}
+  </div>;
+}
+
 function Weekdays({ insights }) {
   const max = Math.max(...insights.weekdays, 1);
   return <div className="weekday-section"><div className="section-title small"><div><span className="eyebrow">התפלגות המרחק</span><h3>לפי יום בשבוע</h3></div><span className="muted">בתקופה שנבחרה</span></div>
@@ -107,17 +174,20 @@ function App() {
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const [range, setRange] = useState('30');
+  const [selectedRunnerId, setSelectedRunnerId] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   useEffect(() => {
     const controller = new AbortController();
     setError('');
-    const url = selectedDate ? `php/get_dashboard_data.php?date=${encodeURIComponent(selectedDate)}` : 'php/get_dashboard_data.php';
+    const params = new URLSearchParams({ range });
+    if (selectedDate) params.set('date', selectedDate);
+    const url = `php/get_dashboard_data.php?${params.toString()}`;
     fetch(url, { signal: controller.signal, credentials: 'same-origin', cache: 'no-store' })
       .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
       .then(result => { if (Number(result.status?.ecode) !== 1 || !result.data) throw new Error(result.status?.emessage || 'תגובה לא תקינה'); setData(result.data); })
       .catch(err => { if (err.name !== 'AbortError') setError(err.message); });
     return () => controller.abort();
-  }, [retry, selectedDate]);
+  }, [retry, selectedDate, range]);
   function changeDate(date) {
     if (date === selectedDate) return;
     setData(null);
@@ -147,8 +217,8 @@ function App() {
         <Metric label="השבוע" value={`${number(week.distance)} ק״מ`} sub={`${number(week.sessions)} אימונים · מיום ראשון`} icon="▦" tone="orange" />
         <Metric label="החודש" value={`${number(month.distance)} ק״מ`} sub={`${number(month.sessions)} אימונים מתחילת החודש`} icon="▤" tone="green" /></div>
       <div className="workspace"><div className="main-column"><section className="panel">
-        <div className="section-title"><div><span className="eyebrow">מרחק קבוצתי מצטבר לפי יום</span><h2>מגמת מרחק</h2></div><Selector label="תקופת הגרף" value={range} options={{ 7: '7 ימים', 30: '30 ימים', 90: '90 ימים', 365: 'שנה' }} onChange={setRange} /></div>
-        <TrendChart trend={trend} /><Weekdays insights={insights} />
+        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 7: '7 ימים', 30: '30 ימים', 90: '90 ימים', 365: 'שנה' }} onChange={setRange} /></div>
+        <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} /><Weekdays insights={insights} />
       </section><ActivityFeed activities={data.activities} /></div>
       <aside className="side-column"><Leaderboard leaders={data.leaders} /><section className="panel"><div className="section-title"><div><span className="eyebrow">מתוך הנתונים</span><h2>תובנות הקבוצה</h2></div><span className="symbol">✦</span></div>
         <div className="insights"><div><span>היום המוביל במרחק</span><strong>{insights.busiest === null ? '—' : `יום ${dayNames[insights.busiest]}`}</strong><small>בתקופה שנבחרה</small></div><div><span>קצב תרגיל ממוצע</span><strong dir="ltr">{formatPace(insights.pace)}</strong><small>דקות לק״מ · בתקופה שנבחרה</small></div><div><span>ממוצע מרחק שבועי</span><strong>{number(trend.reduce((sum, day) => sum + day.distance, 0) * 7 / Number(range))} ק״מ</strong><small>על פני התקופה שנבחרה</small></div><div><span>החודש הקודם</span><strong>{number(previousMonth.distance)} ק״מ</strong><small>{number(previousMonth.sessions)} אימונים</small></div></div>

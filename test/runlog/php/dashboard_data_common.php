@@ -11,9 +11,11 @@ function parseDashboardDate($value, $currentDate) {
     return $date;
 }
 
-function getDashboardData($conn, $today) {
+function getDashboardData($conn, $today, $range = 30, $memberId = null) {
     $end = $today->modify('+1 day')->format('Y-m-d');
     $start = $today->modify('-364 days')->format('Y-m-d');
+    $range = max(1, (int)$range);
+    $measuresStart = $today->modify('-' . ($range - 1) . ' days')->format('Y-m-d');
     $weekStart = $today->modify('-' . $today->format('w') . ' days')->format('Y-m-d');
     $monthStart = $today->modify('first day of this month')->format('Y-m-d');
     $day = $today->format('Y-m-d');
@@ -54,12 +56,65 @@ function getDashboardData($conn, $today) {
     $stmt = $conn->prepare($sql);
     $stmt->execute(array(':today' => $day, ':end' => $end));
     $activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $sql = "SELECT r.id, r.member_name AS name,
+        COUNT(e.id) AS workouts,
+        COALESCE(SUM($distance), 0) AS distance
+        FROM tl_runners r
+        LEFT JOIN tl_events e ON e.runner_id = r.id
+            AND e.run_date >= :start AND e.run_date < :end
+            AND $distance > 0
+        WHERE r.m_show_profile = 1
+        GROUP BY r.id, r.member_name
+        ORDER BY r.member_name";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(array(':start' => $measuresStart, ':end' => $end));
+    $runners = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $persistenceTotal = 0.0;
+    $intensityTotal = 0.0;
+    $intensityRunners = 0;
+    foreach ($runners as &$runner) {
+        $workouts = (int)$runner['workouts'];
+        $distanceTotal = (float)$runner['distance'];
+        $runner['workouts'] = $workouts;
+        $runner['distance'] = $distanceTotal;
+        $runner['km_per_workout'] = $workouts > 0 ? $distanceTotal / $workouts : 0.0;
+        $persistenceTotal += $workouts;
+        if ($runner['km_per_workout'] > 0) {
+            $intensityTotal += $runner['km_per_workout'];
+            $intensityRunners++;
+        }
+    }
+    unset($runner);
+
+    $runnerCount = count($runners);
+    $averageWorkouts = $runnerCount > 0 ? $persistenceTotal / $runnerCount : 0.0;
+    $averageKmPerWorkout = $intensityRunners > 0 ? $intensityTotal / $intensityRunners : 0.0;
+    foreach ($runners as &$runner) {
+        $runner['persistence'] = $averageWorkouts > 0
+            ? round($runner['workouts'] / $averageWorkouts * 100, 1)
+            : 0.0;
+        $runner['intensity'] = $averageKmPerWorkout > 0
+            ? round($runner['km_per_workout'] / $averageKmPerWorkout * 100, 1)
+            : 0.0;
+        $runner['commitment'] = round(sqrt($runner['persistence'] * $runner['intensity']), 1);
+    }
+    unset($runner);
+
     $activeRunners = (int)$conn->query('SELECT COUNT(*) FROM tl_runners WHERE m_show_profile = 1')->fetchColumn();
 
     return array(
         'today' => $day,
         'week_start' => $weekStart,
         'month_start' => $monthStart,
+        'member_id' => $memberId,
+        'measure_range' => $range,
+        'measure_averages' => array(
+            'workouts' => round($averageWorkouts, 1),
+            'km_per_workout' => round($averageKmPerWorkout, 1)
+        ),
+        'measure_runners' => $runners,
         'active_runners' => $activeRunners,
         'days' => $days,
         'leaders' => $leaders,
