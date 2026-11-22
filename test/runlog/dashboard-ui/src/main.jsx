@@ -43,71 +43,66 @@ function TrendChart({ trend }) {
   </div>;
 }
 
-function RadarChart({ runners, memberId, selectedRunnerId, onRunnerChange, range }) {
-  const runnerId = selectedRunnerId || memberId;
-  const selected = runners.find(runner => String(runner.id) === String(runnerId));
+function RadarChart({ selected, hasRunners }) {
   const values = selected ? [
     { label: 'התמדה', value: selected.persistence, icon: '🔥' },
     { label: 'עוצמה', value: selected.intensity, icon: '⚡' },
     { label: 'מחויבות', value: selected.commitment, icon: '🎯' },
   ] : [];
   const hasAllValues = values.every(item => item.value !== null);
-  const max = Math.max(150, ...values.map(item => item.value || 0));
-  const scaleMax = Math.ceil(max / 50) * 50;
-  const center = { x: 180, y: 132 };
-  const radius = 108;
+  const scaleMax = Math.ceil(Math.max(150, ...values.map(item => item.value || 0)) / 50) * 50;
+  const center = { x: 200, y: 170 };
+  const radius = 140;
   const pointFor = (value, index) => {
     const angle = (-90 + index * 120) * Math.PI / 180;
-    const scaled = Math.min(Number(value), scaleMax) / scaleMax * radius;
+    const scaled = value / scaleMax * radius;
     return { x: center.x + Math.cos(angle) * scaled, y: center.y + Math.sin(angle) * scaled };
   };
-  const polygon = values.map((item, index) => {
-    const point = pointFor(item.value, index);
+  const polygonFor = items => items.map((value, index) => {
+    const point = pointFor(value, index);
     return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
   }).join(' ');
-  const labels = [
-    { x: 180, y: 8, textAnchor: 'middle', icon: '🔥', label: 'התמדה' },
-    { x: 312, y: 190, textAnchor: 'middle', icon: '⚡', label: 'עוצמה' },
-    { x: 48, y: 190, textAnchor: 'middle', icon: '🎯', label: 'מחויבות' },
-  ];
+  const badge = item => <span className="radar-badge"><span aria-hidden="true">{item.icon}</span> {item.label} <strong>{number(item.value)}</strong></span>;
+
+  if (!selected) return <p className="empty">{hasRunners ? 'הרץ הנבחר אינו עומד בסף של 20 אימונים בתקופה זו. ניתן לבחור רץ אחר.' : 'אין רצים פעילים עם לפחות 20 אימונים בתקופה זו.'}</p>;
+
   return <div className="radar-wrap">
-    <div className="radar-toolbar">
-      <label>הרץ
-        <select value={selected ? String(selected.id) : ''} onChange={event => onRunnerChange(event.target.value)} disabled={!runners.length}>
-          <option value="" disabled>בחירת רץ או רצה</option>
-          {runners.map(runner => <option key={runner.id} value={String(runner.id)}>{runner.name}</option>)}
-        </select>
-      </label>
-      <span className="muted">תקופה: {range} ימים · 100 = ממוצע הקבוצה בהתמדה ובעוצמה</span>
-    </div>
-    {selected ? <>
-      {hasAllValues ? <svg viewBox="0 0 360 230" className="radar-chart" role="img" aria-label={`מדדי הקבוצה של ${selected.name}`}>
-        {[0.25, 0.5, 0.75, 1].map(ratio => {
-          const ring = values.map((item, index) => {
-            const point = pointFor(scaleMax * ratio, index);
-            return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
-          }).join(' ');
-          return <polygon key={ratio} points={ring} fill="none" className="radar-grid" />;
-        })}
+    {hasAllValues ? <div className="radar-visual">
+      <div className="radar-top-badge">{badge(values[0])}</div>
+      <svg viewBox="0 0 400 300" className="radar-chart" role="img" aria-label={`מדדי הקבוצה של ${selected.name}: התמדה ${number(values[0].value)}, עוצמה ${number(values[1].value)}, מחויבות ${number(values[2].value)}`}>
+        <defs>
+          <radialGradient id="runner-radar-fill">
+            <stop offset="0%" stopColor="#10b981" stopOpacity=".45" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity=".08" />
+          </radialGradient>
+        </defs>
+        {[50, 80, 120, 140].filter(level => level < scaleMax).concat(scaleMax).map(level =>
+          <polygon key={level} points={polygonFor([level, level, level])} fill="none" className="radar-grid" />
+        )}
         {values.map((item, index) => {
           const end = pointFor(scaleMax, index);
           return <line key={item.label} x1={center.x} y1={center.y} x2={end.x} y2={end.y} className="radar-axis" />;
         })}
-        {scaleMax > 100 && <polygon points={values.map((item, index) => {
-          const point = pointFor(100, index);
-          return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
-        }).join(' ')} fill="none" className="radar-average" />}
-        <polygon points={polygon} fill="currentColor" className="radar-area" />
+        <polygon points={polygonFor([100, 100, 100])} fill="none" className="radar-average" />
+        <polygon points={polygonFor(values.map(item => item.value))} fill="url(#runner-radar-fill)" className="radar-area" />
         {values.map((item, index) => {
           const point = pointFor(item.value, index);
           return <circle key={item.label} cx={point.x} cy={point.y} r="5" className="radar-point" />;
         })}
-        {labels.map(item => <text key={item.label} x={item.x} y={item.y} textAnchor={item.textAnchor} className="radar-label">
-          <tspan className="radar-emoji">{item.icon}</tspan><tspan dx="7">{item.label}</tspan>
-        </text>)}
-      </svg> : <p className="empty">לא ניתן לחשב עוצמה ומחויבות כאשר ממוצע המרחק לאימון הוא אפס.</p>}
-      <div className="radar-scores">{values.map(item => <div key={item.label}><span>{item.icon} {item.label}</span><strong>{item.value === null ? '—' : number(item.value)}</strong></div>)}</div>
-    </> : <p className="empty">{runners.length ? 'הרץ הנבחר אינו עומד בסף של 20 אימונים בתקופה זו. ניתן לבחור רץ אחר.' : 'אין רצים פעילים עם לפחות 20 אימונים בתקופה זו.'}</p>}
+        <text x={center.x + 8} y={pointFor(100, 0).y - 5} className="radar-average-label">100</text>
+      </svg>
+      <div className="radar-bottom-badges">{badge(values[2])}{badge(values[1])}</div>
+    </div> : <p className="empty">לא ניתן לחשב עוצמה ומחויבות כאשר ממוצע המרחק לאימון הוא אפס.</p>}
+    <div className="radar-scores" aria-label="מדדי ביצוע מרכזיים">{values.map((item, index) => {
+      const difference = item.value === null ? null : item.value - 100;
+      return <div className="radar-score" key={item.label}>
+        <span className="radar-score-label"><span aria-hidden="true">{item.icon}</span> {item.label}</span>
+        <div><strong>{item.value === null ? '—' : number(item.value)}</strong> <small>{index === 2 ? 'מדד' : 'בסיס 100'}</small></div>
+        {index === 2 ? <span className="radar-score-note">מדד משולב · √(A×B)</span>
+          : difference === null ? <span className="radar-score-note">לא זמין</span>
+            : <span className={`radar-score-note ${difference < 0 ? 'below' : ''}`}>{difference === 0 ? 'בממוצע' : `${difference > 0 ? '↑' : '↓'} ${number(Math.abs(difference))}% ${difference > 0 ? 'מעל הממוצע' : 'מתחת לממוצע'}`}</span>}
+      </div>;
+    })}</div>
   </div>;
 }
 
@@ -195,6 +190,9 @@ function App() {
   const insights = getInsights(data.days, data.today, Number(range));
   const trend = getTrend(data.days, data.today, Number(range));
   const previousMonth = sumDays(data.days, offsetDate(data.month_start, -1).slice(0, 7) + '-01', offsetDate(data.month_start, -1));
+  const runners = data.measure_runners || [];
+  const selectedRunner = runners.find(runner => String(runner.id) === String(selectedRunnerId || data.member_id));
+  const measuresLoading = Number(data.measure_range) !== Number(range);
   return <>
     <header className="topbar"><a className="brand" href="runlog.php"><span className="brand-icon">↗</span><span>רצי הבירה<small>לוח הקבוצה</small></span></a><nav aria-label="ניווט ראשי"><a href="runlog.php">יומן ריצה</a><a href="feed.php">מה עשו החבר׳ה</a><a href="statistics.php">סטטיסטיקה</a><a href="logout.php">התנתקות</a></nav></header>
     <main className="dashboard">
@@ -208,13 +206,22 @@ function App() {
         <Metric label="היום" value={`${number(today.distance)} ק״מ`} sub={`${number(today.sessions)} אימונים עם מרחק`} icon="◷" tone="blue" />
         <Metric label="השבוע" value={`${number(week.distance)} ק״מ`} sub={`${number(week.sessions)} אימונים · מיום ראשון`} icon="▦" tone="orange" />
         <Metric label="החודש" value={`${number(month.distance)} ק״מ`} sub={`${number(month.sessions)} אימונים מתחילת החודש`} icon="▤" tone="green" /></div>
-      <div className="workspace"><div className="main-column"><section className="panel">
-        <div className="section-title"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div><Selector label="תקופת הגרף" value={range} options={{ 30: '30 ימים', 90: '90 ימים', 180: '180 ימים' }} onChange={setRange} /></div>
+      <div className="workspace"><div className="main-column"><section className="panel runner-profile">
+        <div className="runner-profile-header"><div><span className="eyebrow">מדדי ביצוע לעומת ממוצע הקבוצה</span><h2>פרופיל הרץ</h2></div>
+          <label className="runner-select">הרץ
+            <select aria-label="בחירת רץ" value={selectedRunner ? String(selectedRunner.id) : ''} onChange={event => setSelectedRunnerId(event.target.value)} disabled={!runners.length || measuresLoading || !!error}>
+              <option value="" disabled>בחירת רץ או רצה</option>
+              {runners.map(runner => <option key={runner.id} value={String(runner.id)}>{runner.name}</option>)}
+            </select>
+          </label>
+        </div>
+        <Selector label="תקופת הגרף" value={range} options={{ 30: '30 ימים', 90: '90 ימים', 180: '180 ימים' }} onChange={setRange} />
+        <div className="radar-legend"><span>תקופה: <strong>{range} ימים</strong></span><span><i aria-hidden="true" />100 = ממוצע הקבוצה בהתמדה ובעוצמה</span></div>
         {error ? <div className="radar-error" role="alert"><p>לא ניתן לטעון את מדדי הרצים: {error}</p><button type="button" onClick={() => setRetry(retry + 1)}>ניסיון נוסף</button></div>
-          : Number(data.measure_range) !== Number(range) ? <p className="empty" role="status">טוען מדדי רצים...</p>
-            : <RadarChart runners={data.measure_runners || []} memberId={data.member_id} selectedRunnerId={selectedRunnerId} onRunnerChange={setSelectedRunnerId} range={range} />}
-        <details className="measure-help">
-          <summary>מה המשמעות של המדדים?</summary>
+          : measuresLoading ? <p className="empty" role="status">טוען מדדי רצים...</p>
+            : <RadarChart selected={selectedRunner} hasRunners={runners.length > 0} />}
+        <details className="measure-help" open>
+          <summary>ℹ️ מה המשמעות של המדדים?</summary>
           <dl>
             <dt>🔥 התמדה</dt><dd>מספר האימונים של הרץ ביחס למספר האימונים הממוצע בקבוצה.</dd>
             <dt>⚡ עוצמה</dt><dd>המרחק הממוצע לאימון של הרץ ביחס לממוצע הרצים בקבוצה. המדד מתאר אורך אימון, לא מאמץ או מהירות.</dd>

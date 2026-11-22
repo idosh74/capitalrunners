@@ -59,25 +59,39 @@ h3 { font-size: 17px; }
 .trend-line { stroke: #62df7d; stroke-width: 3; stroke-linejoin: round; }
 .gridline { stroke-width: 1; }
 .chart-axis { display: flex; justify-content: space-between; color: #89978e; font-size: 11px; }
-.radar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 2px; }
-.radar-toolbar label { display: flex; align-items: center; gap: 8px; color: #bdcaba; font-size: 12px; }
-.radar-toolbar select { min-width: 150px; padding: 8px 10px; border: 1px solid #3e4a3d; border-radius: 8px; background: #10192b; color: #dae2fd; font: inherit; }
-.radar-chart { width: 100%; max-height: 260px; margin: 4px auto 0; direction: ltr; color: #62df7d; }
-.radar-grid { stroke: #4b5a63; stroke-width: 1; }
-.radar-axis { stroke: #3e4a3d; stroke-width: 1; }
-.radar-average { stroke: #89ceff; stroke-width: 1.5; stroke-dasharray: 5 5; }
-.radar-area { fill: #62df7d30; stroke: #62df7d; stroke-width: 3; }
-.radar-point { fill: #62df7d; stroke: #dffff0; stroke-width: 2; }
-.radar-label { fill: #dae2fd; font-size: 15px; font-weight: 700; }
-.radar-emoji { fill: #62df7d; font-size: 16px; }
-.radar-scores { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-.radar-scores div { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #10192b; border: 1px solid #3e4a3d55; border-radius: 10px; padding: 12px; }
-.radar-scores span { color: #bdcaba; font-size: 12px; }
-.radar-scores strong { color: #62df7d; font-size: 22px; direction: ltr; }
+.runner-profile-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid #263449; }
+.runner-select { display: flex; align-items: center; gap: 8px; color: #bdcaba; font-size: 12px; }
+.runner-select select { max-width: 180px; padding: 8px 12px; border: 1px solid #475569; border-radius: 20px; background: #1e293b; color: #e2e8f0; font: inherit; }
+.runner-profile > .selector { display: flex; width: 100%; flex-wrap: nowrap; border-radius: 12px; }
+.runner-profile > .selector button { flex: 1; }
+.radar-legend { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 10px 2px 12px; color: #a7b3b0; font-size: 11px; }
+.radar-legend span:last-child { display: inline-flex; align-items: center; gap: 6px; }
+.radar-legend i { width: 16px; border-top: 2px dashed #38bdf8; }
+.radar-visual { padding: 16px; border: 1px solid #1e293b; border-radius: 24px; background: radial-gradient(circle at 50% 15%, #10b98118, transparent 48%), linear-gradient(#0f172ae6,#101726e6); }
+.radar-top-badge { text-align: center; }
+.radar-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #334155; border-radius: 20px; background: #1e293bcc; color: #e2e8f0; font-size: 12px; font-weight: 700; }
+.radar-badge strong { color: #34d399; direction: ltr; }
+.radar-chart { display: block; width: 100%; max-width: 400px; max-height: 300px; margin: 0 auto; direction: ltr; }
+.radar-grid { stroke: #29374a; stroke-width: 1; }
+.radar-axis { stroke: #334155; stroke-width: 1.2; }
+.radar-average { stroke: #38bdf8; stroke-width: 2; stroke-dasharray: 6 4; }
+.radar-average-label { fill: #38bdf8; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #101726; stroke-width: 3px; }
+.radar-area { stroke: #10b981; stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(0 0 5px #10b98180); }
+.radar-point { fill: #10b981; stroke: #fff; stroke-width: 2; }
+.radar-bottom-badges { display: flex; direction: ltr; justify-content: space-between; gap: 8px; }
+.radar-bottom-badges .radar-badge { direction: rtl; }
+.radar-scores { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.radar-score { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; border: 1px solid #1e293b; border-radius: 16px; background: #0f172a; }
+.radar-score-label { color: #cbd5e1; font-size: 12px; font-weight: 700; }
+.radar-score strong { color: #f8fafc; font-size: 24px; direction: ltr; overflow-wrap: anywhere; }
+.radar-score small { color: #94a3b8; font-size: 10px; }
+.radar-score-note { padding: 3px 6px; border-radius: 6px; background: #10b9811a; color: #34d399; font-size: 11px; overflow-wrap: anywhere; }
+.radar-score-note.below { background: #f59e0b1a; color: #fbbf24; }
 .radar-error { color: #ffb4ab; overflow-wrap: anywhere; }
 .radar-error button { margin-top: 12px; padding: 8px 12px; border: 1px solid #3e4a3d; border-radius: 8px; background: #222a3d; color: #dae2fd; }
-.measure-help { margin-top: 18px; padding: 14px; border: 1px solid #3e4a3d66; border-radius: 10px; background: #10192b; color: #bdcaba; font-size: 13px; line-height: 1.6; }
-.measure-help summary { color: #89ceff; cursor: pointer; font-weight: 700; }
+.measure-help { margin-top: 14px; padding: 16px; border: 1px solid #1e293b; border-radius: 16px; background: #0f172a; color: #94a3b8; font-size: 13px; line-height: 1.6; }
+.measure-help summary { color: #e2e8f0; cursor: pointer; font-weight: 700; }
+.measure-help[open] summary { padding-bottom: 10px; border-bottom: 1px solid #263449; }
 .measure-help summary:focus-visible { outline: 2px solid #89ceff; outline-offset: 3px; }
 .measure-help dl { margin: 12px 0; }
 .measure-help dt { color: #dae2fd; font-weight: 700; margin-top: 8px; }
